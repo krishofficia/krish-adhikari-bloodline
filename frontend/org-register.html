@@ -20,6 +20,7 @@
                 <li><a href="login.html">Login</a></li>
                 <li><a href="register.html">Register as Donor</a></li>
                 <li><a href="org-register.html" class="active">Register Organization</a></li>
+                <li><a href="admin-login.html"><i class="fas fa-shield-alt"></i> Admin</a></li>
             </ul>
             <div class="hamburger">
                 <i class="fas fa-bars"></i>
@@ -66,6 +67,47 @@
                             Location (City / Area)
                         </label>
                         <input type="text" id="orgLocation" name="location" required placeholder="Enter your organization's location">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orgPhone">
+                            <i class="fas fa-phone"></i>
+                            Phone Number
+                        </label>
+                        <input type="tel" id="orgPhone" name="phone" required placeholder="Enter your organization's phone number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="licenseNumber">
+                            <i class="fas fa-id-card"></i>
+                            License Number
+                        </label>
+                        <input type="text" id="licenseNumber" name="licenseNumber" required placeholder="Enter your license number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="panNumber">
+                            <i class="fas fa-id-badge"></i>
+                            PAN Number
+                        </label>
+                        <input type="text" id="panNumber" name="panNumber" required placeholder="Enter your PAN number">
+                        <small style="color: var(--text-light); font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            <i class="fas fa-info-circle"></i> Enter your organization's PAN card number (required for verification)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="panCardImage">
+                            <i class="fas fa-image"></i>
+                            PAN Card Image
+                        </label>
+                        <input type="file" id="panCardImage" name="panCardImage" accept="image/*" required>
+                        <small style="color: var(--text-light); font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            <i class="fas fa-info-circle"></i> Upload a clear image of your PAN card (JPG, PNG, or PDF)
+                        </small>
+                        <div id="panCardPreview" style="margin-top: 10px; text-align: center; display: none;">
+                            <img id="panCardPreviewImg" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
                     </div>
 
                     <div class="form-group">
