@@ -330,22 +330,37 @@ router.post('/login-donor', async (req, res) => {
 // PUT /api/auth/availability - Update donor availability
 router.put('/availability', async (req, res) => {
     try {
+        console.log('Availability update request received');
+        console.log('Headers:', req.headers);
+        
         const token = req.headers.authorization?.split(' ')[1];
+        console.log('Token extracted:', token);
+        
         if (!token) {
+            console.log('No token provided');
             return res.status(401).json({ message: 'No token provided' });
         }
         
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        console.log('Decoded token:', decoded);
+        
         const donorId = decoded.donorId;
+        console.log('Donor ID from token:', donorId);
+        
         const { availability } = req.body;
+        console.log('Request body availability:', availability);
         
         const donor = await Donor.findById(donorId);
+        console.log('Found donor:', donor);
+        
         if (!donor) {
+            console.log('Donor not found');
             return res.status(404).json({ message: 'Donor not found' });
         }
         
         donor.availability = availability;
         await donor.save();
+        console.log('Donor updated successfully');
         
         res.json({
             message: 'Availability updated successfully',

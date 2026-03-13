@@ -8,7 +8,7 @@ A full-stack web application for connecting blood donors with organizations in n
 - **Organization Login**: Organizations can login to request blood
 - **Donor Dashboard**: View profile, manage availability, see matching blood requests
 - **Organization Dashboard**: Request blood, view available donors
-- **Real Backend**: Node.js/Express server with SQLite database
+- **Real Backend**: Node.js/Express server 
 - **JWT Authentication**: Secure token-based authentication
 - **Password Hashing**: Bcrypt for secure password storage
 

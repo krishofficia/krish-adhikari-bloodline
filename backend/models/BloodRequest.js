@@ -41,7 +41,38 @@ const BloodRequestSchema = new mongoose.Schema({
         required: true,
         enum: ['Pending', 'Approved', 'Completed'],
         default: 'Pending'
-    }
+    },
+    donorResponses: [{
+        donorId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Donor',
+            required: true
+        },
+        donorName: {
+            type: String,
+            required: true
+        },
+        donorEmail: {
+            type: String,
+            required: true
+        },
+        donorPhone: {
+            type: String,
+            required: true
+        },
+        responseDate: {
+            type: Date,
+            default: Date.now
+        },
+        completionDate: {
+            type: Date
+        },
+        status: {
+            type: String,
+            enum: ['Accepted', 'Rejected', 'Completed'],
+            default: 'Accepted'
+        }
+    }]
 }, {
     timestamps: true
 });

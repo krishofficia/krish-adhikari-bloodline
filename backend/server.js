@@ -18,6 +18,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const bloodRequestRoutes = require('./routes/bloodRequests');
 const adminRoutes = require('./routes/admin');
+const donorRoutes = require('./routes/donor');
 
 // Import database connection
 const connectDB = require('./config/database');
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/blood-requests', bloodRequestRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/donor', donorRoutes);
 
 // API routes should be defined before static file serving
 // Static file serving will be added after API routes
@@ -53,7 +55,7 @@ app.use('/api/admin', adminRoutes);
 // ============================================
 
 /**
- * CHATBOT TRAINING EXPLANATION (Academic Context):
+ * CHATBOT TRAINING EXPLANATION :
  * 
  * This chatbot uses Natural Language Processing (NLP) techniques:
  * 1. TOKENIZATION: Breaks down text into individual words/tokens

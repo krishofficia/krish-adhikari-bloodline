@@ -44,11 +44,12 @@ const sendNotification = async (options) => {
 
 /**
  * Generate blood request notification email template
+ * @param {Object} donor - Donor information
  * @param {Object} bloodRequest - Blood request details
  * @param {Object} organization - Organization details
  * @returns {string} - HTML email content
  */
-const generateBloodRequestEmail = (bloodRequest, organization) => {
+const generateBloodRequestEmail = (donor, bloodRequest, organization) => {
     return `
     <!DOCTYPE html>
     <html>
@@ -109,10 +110,22 @@ const generateBloodRequestEmail = (bloodRequest, organization) => {
                 text-decoration: none;
                 border-radius: 5px;
                 font-weight: 600;
-                margin: 20px 0;
+                margin: 10px 5px;
                 text-align: center;
             }
             .cta-button:hover {
+                background: #c0392b;
+            }
+            .accept-btn {
+                background: #27ae60;
+            }
+            .accept-btn:hover {
+                background: #219a52;
+            }
+            .decline-btn {
+                background: #e74c3c;
+            }
+            .decline-btn:hover {
                 background: #c0392b;
             }
             .footer {
@@ -140,6 +153,10 @@ const generateBloodRequestEmail = (bloodRequest, organization) => {
                 font-size: 12px;
                 margin-left: 10px;
             }
+            .button-container {
+                text-align: center;
+                margin: 30px 0;
+            }
         </style>
     </head>
     <body>
@@ -154,7 +171,7 @@ const generateBloodRequestEmail = (bloodRequest, organization) => {
                 
                 <div class="detail-row">
                     <span class="detail-label">Organization:</span>
-                    <span class="detail-value">${organization.name}</span>
+                    <span class="detail-value">${organization?.name || 'Hospital'}</span>
                 </div>
                 
                 <div class="detail-row">
@@ -176,14 +193,27 @@ const generateBloodRequestEmail = (bloodRequest, organization) => {
                 </div>
                 
                 <div class="detail-row">
+                    <span class="detail-label">Hospital:</span>
+                    <span class="detail-value">${bloodRequest.hospitalName}</span>
+                </div>
+                
+                <div class="detail-row">
                     <span class="detail-label">Required Date:</span>
                     <span class="detail-value">${new Date(bloodRequest.requiredDate).toLocaleDateString()}</span>
                 </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Urgency Level:</span>
+                    <span class="detail-value">${bloodRequest.urgencyLevel}</span>
+                </div>
             </div>
             
-            <div style="text-align: center;">
-                <a href="http://localhost:3000/login.html" class="cta-button">
-                    Login to Bloodline to View Details
+            <div class="button-container">
+                <a href="http://localhost:5173/donor/respond/${bloodRequest._id}/accept" class="cta-button accept-btn">
+                    ✅ Accept Request
+                </a>
+                <a href="http://localhost:5173/donor/respond/${bloodRequest._id}/decline" class="cta-button decline-btn">
+                    ❌ Decline Request
                 </a>
             </div>
             
@@ -200,5 +230,6 @@ const generateBloodRequestEmail = (bloodRequest, organization) => {
 
 module.exports = {
     sendNotification,
+    generateBloodRequestEmail,
     generateBloodRequestEmail
 };

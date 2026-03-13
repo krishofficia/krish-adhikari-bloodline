@@ -199,6 +199,40 @@ router.get('/organizations/pending', authenticateAdmin, async (req, res) => {
     }
 });
 
+// PUT /api/admin/organizations/:id - Update organization
+router.put('/organizations/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const { name, email, phone, licenseNumber, panNumber, verificationStatus } = req.body;
+        
+        const organization = await Organization.findById(req.params.id);
+        if (!organization) {
+            return res.status(404).json({ message: 'Organization not found' });
+        }
+
+        // Update organization fields
+        if (name) organization.name = name;
+        if (email) organization.email = email;
+        if (phone) organization.phone = phone;
+        if (licenseNumber) organization.licenseNumber = licenseNumber;
+        if (panNumber) organization.panNumber = panNumber;
+        if (verificationStatus) {
+            organization.verificationStatus = verificationStatus;
+            organization.isVerified = verificationStatus === 'approved';
+        }
+
+        await organization.save();
+
+        res.json({
+            success: true,
+            message: 'Organization updated successfully',
+            organization
+        });
+    } catch (error) {
+        console.error('Error updating organization:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // POST /api/admin/organizations/:id/approve - Approve organization
 router.post('/organizations/:id/approve', authenticateAdmin, async (req, res) => {
     try {
@@ -253,6 +287,26 @@ router.post('/organizations/:id/reject', authenticateAdmin, async (req, res) => 
         });
     } catch (error) {
         console.error('Error rejecting organization:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// DELETE /api/admin/organizations/:id - Delete organization
+router.delete('/organizations/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const organization = await Organization.findById(req.params.id);
+        if (!organization) {
+            return res.status(404).json({ message: 'Organization not found' });
+        }
+
+        await Organization.findByIdAndDelete(req.params.id);
+
+        res.json({
+            success: true,
+            message: 'Organization deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting organization:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
