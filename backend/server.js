@@ -239,6 +239,31 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Bloodline API is running' });
 });
 
+// Health check that includes Python service status
+app.get('/api/health/python', async (req, res) => {
+    try {
+        const response = await fetch('http://127.0.0.1:5001/health');
+        if (response.ok) {
+            const data = await response.json();
+            res.json({ 
+                status: 'OK', 
+                message: 'Bloodline API and Python chatbot are running',
+                python_service: data
+            });
+        } else {
+            res.json({ 
+                status: 'WARNING', 
+                message: 'Bloodline API running but Python chatbot offline' 
+            });
+        }
+    } catch (error) {
+        res.json({ 
+            status: 'WARNING', 
+            message: 'Bloodline API running but Python chatbot offline' 
+        });
+    }
+});
+
 // ============================================
 // AI CHATBOT API ENDPOINT
 // ============================================
@@ -257,7 +282,7 @@ app.get('/api/health', (req, res) => {
  *   "answer": "chatbot answer"
  * }
  */
-app.post('/chatbot', async (req, res) => {
+app.post('/api/chatbot', async (req, res) => {
     try {
         const { question } = req.body;
 
@@ -271,12 +296,12 @@ app.post('/chatbot', async (req, res) => {
         console.log('Forwarding question to Python chatbot service...');
         
         // Call Python Flask API
-        const chatbotResponse = await fetch('http://127.0.0.1:5000/chatbot', {
+        const chatbotResponse = await fetch('http://127.0.0.1:5001/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ question: question.trim() })
+            body: JSON.stringify({ message: question.trim() })
         });
 
         console.log('Python chatbot service response status:', chatbotResponse.status);
@@ -291,7 +316,7 @@ app.post('/chatbot', async (req, res) => {
         
         // Return answer from Python service
         res.json({ 
-            answer: data.answer || "I'm sorry, I couldn't process your request."
+            answer: data.reply || "I'm sorry, I couldn't process your request."
         });
     } catch (error) {
         console.error('Chatbot error:', error);

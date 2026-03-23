@@ -144,4 +144,83 @@ router.delete('/donation-history/:donationId', authenticateDonor, async (req, re
     }
 });
 
+// GET /api/donors/ranking - Get donor ranking leaderboard
+router.get('/ranking', async (req, res) => {
+    try {
+        console.log('Fetching donor ranking leaderboard...');
+        
+        // First, check if any donors exist
+        const totalDonors = await Donor.countDocuments({ isVerified: true });
+        console.log(`Total verified donors: ${totalDonors}`);
+        
+        // Get all donors sorted by donationCount in descending order
+        const donors = await Donor.find({ isVerified: true })
+            .select('fullName bloodGroup donationCount badge')
+            .sort({ donationCount: -1 })
+            .limit(50); // Limit to top 50 donors
+        
+        console.log(`Found ${donors.length} donors for ranking`);
+        console.log('Donors:', donors.map(d => ({ name: d.fullName, count: d.donationCount, badge: d.badge })));
+        
+        // Add rank numbers and format response
+        const rankedDonors = donors.map((donor, index) => ({
+            rank: index + 1,
+            fullName: donor.fullName,
+            bloodGroup: donor.bloodGroup,
+            donationCount: donor.donationCount,
+            badge: donor.badge
+        }));
+        
+        console.log(`Returning ${rankedDonors.length} ranked donors`);
+        
+        res.json({
+            success: true,
+            data: rankedDonors,
+            totalDonors: rankedDonors.length
+        });
+        
+    } catch (error) {
+        console.error('Error fetching donor ranking:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// DEBUG: Simple route to check database state
+router.get('/debug', async (req, res) => {
+    try {
+        console.log('Debug: Checking database state...');
+        
+        // Count all donors
+        const totalDonors = await Donor.countDocuments();
+        const verifiedDonors = await Donor.countDocuments({ isVerified: true });
+        
+        console.log(`Total donors: ${totalDonors}`);
+        console.log(`Verified donors: ${verifiedDonors}`);
+        
+        // Get first few donors
+        const sampleDonors = await Donor.find({ isVerified: true })
+            .limit(5)
+            .select('fullName donationCount badge isVerified');
+            
+        console.log('Sample donors:', sampleDonors);
+        
+        res.json({
+            totalDonors,
+            verifiedDonors,
+            sampleDonors: sampleDonors.map(d => ({
+                name: d.fullName,
+                donationCount: d.donationCount,
+                badge: d.badge,
+                isVerified: d.isVerified
+            }))
+        });
+    } catch (error) {
+        console.error('Debug error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

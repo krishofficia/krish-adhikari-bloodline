@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 function Login() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -9,6 +11,13 @@ function Login() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Check if there's a return URL and message from DonorResponse or Homepage
+  useEffect(() => {
+    if (location.state?.message) {
+      setError(location.state.message)
+    }
+  }, [location.state])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -48,10 +57,12 @@ function Login() {
         
         if (formData.role === 'donor') {
           localStorage.setItem('user', JSON.stringify(data.donor))
-          window.location.href = '/donor-dashboard'
+          // Check if there's a return URL
+          const returnUrl = location.state?.returnUrl || '/donor-dashboard'
+          navigate(returnUrl)
         } else if (formData.role === 'organization') {
           localStorage.setItem('user', JSON.stringify(data.organization))
-          window.location.href = '/org-dashboard'
+          navigate('/org-dashboard')
         }
       } else {
         setError(data.message || 'Login failed. Please try again.')
@@ -92,8 +103,21 @@ function Login() {
               <i className="fas fa-sign-in-alt"></i>
               <h2>Login to Bloodline</h2>
               <p>Welcome back! Please login to continue.</p>
+              {location.state?.returnUrl && (
+                <p style={{ 
+                  fontSize: '0.9rem', 
+                  color: 'var(--accent-color)', 
+                  marginTop: '0.5rem',
+                  backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                  padding: '0.5rem',
+                  borderRadius: '5px',
+                  border: '1px solid rgba(255, 193, 7, 0.3)'
+                }}>
+                  <i className="fas fa-envelope"></i> Please login to respond to blood request
+                </p>
+              )}
               <p style={{fontSize: '0.9rem', color: 'var(--text-light)', marginTop: '0.5rem'}}>
-                <i className="fas fa-info-circle"></i> Use the email and password you registered with
+                <i className="fas fa-info-circle"></i> Use your donor credentials to continue
               </p>
             </div>
             

@@ -200,7 +200,7 @@ router.get('/profile', async (req, res) => {
         }
         
         res.json({
-            user: donor
+            donor: donor
         });
     } catch (error) {
         console.error('Profile error:', error);

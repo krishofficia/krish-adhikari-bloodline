@@ -20,8 +20,8 @@ function DonorResponse() {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
 
       if (!token || !user._id) {
-        setError('Please login to respond to this request')
-        setLoading(false)
+        // Redirect to clean homepage
+        navigate('/')
         return
       }
 
@@ -96,10 +96,10 @@ function DonorResponse() {
 
   if (loading && !requestDetails) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading request details...</p>
+      <div className="container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="loading-spinner" style={{ width: '50px', height: '50px', margin: '0 auto', fontSize: '3rem', color: 'var(--primary-color)' }}></div>
+          <p style={{ marginTop: '1rem', color: '#6c757d' }}>Loading request details...</p>
         </div>
       </div>
     )
@@ -107,15 +107,16 @@ function DonorResponse() {
 
   if (error && !requestDetails) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <div className="text-center">
-            <div className="text-red-600 text-5xl mb-4">❌</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Error</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+      <div className="container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="auth-card" style={{ maxWidth: '400px', width: '100%' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#dc3545' }}>❌</div>
+            <h2 className="form-title" style={{ marginBottom: '1rem' }}>Error</h2>
+            <p style={{ color: '#6c757d', marginBottom: '1.5rem' }}>{error}</p>
             <button
               onClick={() => navigate('/donor/dashboard')}
-              className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 transition"
+              className="btn"
+              style={{ backgroundColor: '#dc3545' }}
             >
               Go to Dashboard
             </button>
@@ -126,112 +127,107 @@ function DonorResponse() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-red-600 text-white p-4">
-        <div className="container mx-auto">
-          <h1 className="text-2xl font-bold">Blood Request Response</h1>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '1rem 0' }}>
+        <div className="container">
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>Blood Request Response</h1>
         </div>
       </div>
 
-      <div className="container mx-auto p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="container" style={{ padding: '2rem 1rem' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div className="auth-card">
             {success ? (
-              <div className="text-center">
-                <div className="text-green-600 text-5xl mb-4">
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#28a745' }}>
                   {action === 'accept' ? '✅' : '📝'}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                <h2 className="form-title" style={{ marginBottom: '1rem' }}>
                   {action === 'accept' ? 'Request Accepted!' : 'Response Recorded'}
                 </h2>
-                <p className="text-gray-600 mb-6">{success}</p>
-                <p className="text-gray-500">Redirecting to dashboard...</p>
+                <p style={{ color: '#6c757d', marginBottom: '1.5rem' }}>{success}</p>
+                <p style={{ color: '#6c757d' }}>Redirecting to dashboard...</p>
               </div>
             ) : (
               <>
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">
+                <div style={{ marginBottom: '2rem' }}>
+                  <h2 className="form-title" style={{ marginBottom: '1rem' }}>
                     Blood Request Details
                   </h2>
                   {requestDetails && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div style={{ backgroundColor: '#f8f9fa', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                         <div>
-                          <p className="text-sm text-gray-600">Organization</p>
-                          <p className="font-semibold">{requestDetails.organizationId?.name || 'Hospital'}</p>
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Organization</p>
+                          <p style={{ fontWeight: '600' }}>{requestDetails.organizationId?.name || 'Hospital'}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Blood Group</p>
-                          <p className="font-semibold text-red-600">{requestDetails.bloodGroup}</p>
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Blood Group</p>
+                          <p style={{ fontWeight: '600', color: 'var(--primary-color)' }}>{requestDetails.bloodGroup}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Location</p>
-                          <p className="font-semibold">{requestDetails.location}</p>
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Location</p>
+                          <p style={{ fontWeight: '600' }}>{requestDetails.location}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Hospital</p>
-                          <p className="font-semibold">{requestDetails.hospitalName}</p>
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Hospital</p>
+                          <p style={{ fontWeight: '600' }}>{requestDetails.hospitalName}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Units Needed</p>
-                          <p className="font-semibold">{requestDetails.quantity} units</p>
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Units Needed</p>
+                          <p style={{ fontWeight: '600' }}>{requestDetails.quantity} units</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Required Date</p>
-                          <p className="font-semibold">
+                          <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.25rem' }}>Required Date</p>
+                          <p style={{ fontWeight: '600' }}>
                             {new Date(requestDetails.requiredDate).toLocaleDateString()}
                           </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Urgency</p>
-                          <p className="font-semibold text-red-600">{requestDetails.urgencyLevel}</p>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    Your Response
+                <div style={{ backgroundColor: '#e3f2fd', border: '1px solid #bbdefb', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1976d2' }}>
+                    Confirm Your Response
                   </h3>
-                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                    <p className="text-gray-700">
-                      You are about to <strong>{action}</strong> this blood request.
+                  <p style={{ color: '#424242', lineHeight: '1.5' }}>
+                    You are about to <strong>{action}</strong> this blood request.
+                  </p>
+                  {action === 'accept' ? (
+                    <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
+                      By accepting, you commit to donating blood for this request. 
+                      The hospital will contact you with further details.
                     </p>
-                    {action === 'accept' ? (
-                      <p className="text-gray-600 mt-2">
-                        By accepting, you commit to donating blood for this request. 
-                        The hospital will contact you with further details.
-                      </p>
-                    ) : (
-                      <p className="text-gray-600 mt-2">
-                        Thank you for considering this request. We understand that 
-                        circumstances may prevent you from donating at this time.
-                      </p>
-                    )}
-                  </div>
+                  ) : (
+                    <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
+                      Thank you for considering this request. We understand that 
+                      circumstances may prevent you from donating at this time.
+                    </p>
+                  )}
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-6">
-                    <p className="text-red-600">{error}</p>
+                  <div style={{ backgroundColor: '#f8d7da', border: '1px solid #f5c6cb', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                    <p style={{ color: '#721c24', margin: 0 }}>{error}</p>
                   </div>
                 )}
 
-                <div className="flex gap-4">
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleSubmitResponse}
                     disabled={loading}
-                    className={`flex-1 py-3 px-6 rounded-lg font-semibold transition ${
-                      action === 'accept'
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`btn flex-1 ${loading ? 'loading' : ''}`}
+                    style={{
+                      backgroundColor: action === 'accept' ? '#28a745' : '#dc3545',
+                      opacity: loading ? 0.5 : 1,
+                      cursor: loading ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     {loading ? (
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="loading-spinner" style={{ width: '20px', height: '20px', marginRight: '0.5rem', border: '2px solid white', borderTop: '2px solid transparent' }}></div>
                         Processing...
                       </span>
                     ) : (
@@ -242,7 +238,12 @@ function DonorResponse() {
                   </button>
                   <button
                     onClick={() => navigate('/donor/dashboard')}
-                    className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    className="btn"
+                    style={{
+                      backgroundColor: 'white',
+                      color: '#6c757d',
+                      border: '1px solid #dee2e6'
+                    }}
                   >
                     Cancel
                   </button>

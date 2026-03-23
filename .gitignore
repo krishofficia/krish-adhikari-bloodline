@@ -18,3 +18,26 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Local scripts
+*.bat
+*.ps1
+
+# Old chatbot files
+chatbot_service.py
+start_chatbot.py
+chatbot_requirements.txt
+AI-CHATBOT-QUICK-START.md
+CHATBOT-SETUP-GUIDE.md
+

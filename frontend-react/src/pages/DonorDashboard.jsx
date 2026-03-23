@@ -14,6 +14,12 @@ function DonorDashboard() {
   const [donationHistory, setDonationHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [responseLoading, setResponseLoading] = useState({})
+  const [donationStatus, setDonationStatus] = useState({
+    donationCount: 0,
+    badge: 'Bronze Donor',
+    rank: 0
+  })
+  const [leaderboard, setLeaderboard] = useState([])
 
   useEffect(() => {
     // Load donor data from localStorage or API
@@ -38,7 +44,7 @@ function DonorDashboard() {
         }
 
         // Load blood requests for this donor
-        const response = await fetch('/api/donor/requests', {
+        const response = await fetch('/api/blood-requests/donor/requests', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -120,6 +126,70 @@ function DonorDashboard() {
     }
 
     loadDonationHistory()
+
+    // Load donation status
+    const loadDonationStatus = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        
+        // Get current donor's data including donation count and badge
+        const response = await fetch('/api/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setDonationStatus({
+            donationCount: data.donor?.donationCount || 0,
+            badge: data.donor?.badge || 'Bronze Donor',
+            rank: data.donor?.rank || 0
+          })
+        }
+      } catch (error) {
+        console.error('Error loading donation status:', error)
+      }
+    }
+
+    // Load leaderboard
+    const loadLeaderboard = async () => {
+      try {
+        console.log('Loading leaderboard...')
+        const response = await fetch('/api/blood-requests/donors/ranking')
+        
+        console.log('Leaderboard response status:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Leaderboard data:', data)
+          setLeaderboard(data.data || [])
+        } else {
+          console.error('Leaderboard error:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Error loading leaderboard:', error)
+      }
+    }
+
+    loadDonationStatus()
+    loadLeaderboard()
+  }, [])
+
+  // Refresh donation status when page becomes visible (after returning from donation completion)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Reload the page to refresh all data
+        window.location.reload()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const handleAvailabilityToggle = async () => {
@@ -352,6 +422,27 @@ function DonorDashboard() {
     }
   }
 
+  // Helper functions for badge progress
+  const getBadgeProgress = () => {
+    const count = donationStatus.donationCount;
+    if (count >= 20) return 100;
+    if (count >= 10) return 100;
+    if (count >= 5) return 100;
+    if (count >= 3) return 100;
+    if (count >= 1) return 100;
+    return 0;
+  }
+
+  const getBadgeProgressText = () => {
+    const count = donationStatus.donationCount;
+    if (count >= 20) return '🏆 Hero Donor - Maximum Level!';
+    if (count >= 10) return `10 more donations to reach Hero Donor`;
+    if (count >= 5) return `${10 - count} more donations to reach Platinum Donor`;
+    if (count >= 3) return `${5 - count} more donations to reach Gold Donor`;
+    if (count >= 1) return `${3 - count} more donations to reach Silver Donor`;
+    return '1 more donation to reach Bronze Donor';
+  }
+
   if (loading) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: '2rem' }}>
@@ -450,6 +541,56 @@ function DonorDashboard() {
                     <i className={`fas fa-toggle-${isAvailable ? 'on' : 'off'}`}></i>
                   </button>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          {/* My Donation Status Section */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2>
+                <i className="fas fa-trophy"></i>
+                My Donation Status
+              </h2>
+            </div>
+            <div className="donation-status-content">
+              <div className="status-grid">
+                <div className="status-item">
+                  <div className="status-icon">
+                    <i className="fas fa-hand-holding-heart"></i>
+                  </div>
+                  <div className="status-info">
+                    <h3>Total Donations</h3>
+                    <p className="status-value">{donationStatus.donationCount}</p>
+                  </div>
+                </div>
+                <div className="status-item">
+                  <div className="status-icon">
+                    <i className="fas fa-medal"></i>
+                  </div>
+                  <div className="status-info">
+                    <h3>Current Badge</h3>
+                    <p className="status-badge">{donationStatus.badge}</p>
+                  </div>
+                </div>
+                <div className="status-item">
+                  <div className="status-icon">
+                    <i className="fas fa-ranking-star"></i>
+                  </div>
+                  <div className="status-info">
+                    <h3>Current Rank</h3>
+                    <p className="status-value">
+                      {donationStatus.rank > 0 ? `#${donationStatus.rank}` : 'Not Ranked'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="badge-progress">
+                <h4>Next Badge Progress</h4>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${getBadgeProgress()}%` }}></div>
+                </div>
+                <p className="progress-text">{getBadgeProgressText()}</p>
               </div>
             </div>
           </div>
@@ -591,6 +732,53 @@ function DonorDashboard() {
                   <p>No donation history available</p>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>
                     Your completed donations will appear here
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Leaderboard Section */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2>
+                <i className="fas fa-trophy"></i>
+                Top Donors Leaderboard
+              </h2>
+              <span className="badge" style={{ backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '12px', fontSize: '0.8rem' }}>
+                Top {leaderboard.length}
+              </span>
+            </div>
+            <div className="leaderboard-list">
+              {leaderboard.length > 0 ? (
+                leaderboard.map((donor, index) => (
+                  <div key={index} className={`leaderboard-item ${index < 3 ? `top-${index + 1}` : ''}`}>
+                    <div className="rank-badge">
+                      <span className="rank-number">#{donor.rank}</span>
+                      {index === 0 && <i className="fas fa-crown gold"></i>}
+                      {index === 1 && <i className="fas fa-medal silver"></i>}
+                      {index === 2 && <i className="fas fa-award bronze"></i>}
+                    </div>
+                    <div className="donor-info">
+                      <h4 className="donor-name">{donor.fullName}</h4>
+                      <div className="donor-details">
+                        <span className="blood-group-badge">{donor.bloodGroup}</span>
+                        <span className="donation-count">{donor.donationCount} donations</span>
+                      </div>
+                    </div>
+                    <div className="badge-info">
+                      <span className={`badge-${donor.badge.toLowerCase().replace(' ', '-')}`}>
+                        {donor.badge}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <i className="fas fa-trophy"></i>
+                  <p>No donor rankings available yet</p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>
+                    Be the first to donate and appear on the leaderboard!
                   </p>
                 </div>
               )}

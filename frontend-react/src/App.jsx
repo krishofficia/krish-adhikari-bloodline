@@ -21,6 +21,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/org-register" element={<OrgRegister />} />
         <Route path="/donor-dashboard" element={<DonorDashboard />} />
+        <Route path="/donor/dashboard" element={<DonorDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/org-dashboard" element={<OrgDashboard />} />
         <Route path="/chatbot" element={<Chatbot />} />

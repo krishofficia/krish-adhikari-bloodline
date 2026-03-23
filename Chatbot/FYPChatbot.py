@@ -1,0 +1,293 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "0981e2fc-84e9-44bb-b568-9fc80377a10f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: sentence-transformers in c:\\users\\dell\\anaconda3\\lib\\site-packages (5.2.0)\n",
+      "Requirement already satisfied: scikit-learn in c:\\users\\dell\\anaconda3\\lib\\site-packages (1.5.1)\n",
+      "Requirement already satisfied: pandas in c:\\users\\dell\\anaconda3\\lib\\site-packages (2.2.2)\n",
+      "Requirement already satisfied: transformers<6.0.0,>=4.41.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (4.57.6)\n",
+      "Requirement already satisfied: tqdm in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (4.66.5)\n",
+      "Requirement already satisfied: torch>=1.11.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (2.10.0)\n",
+      "Requirement already satisfied: scipy in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (1.13.1)\n",
+      "Requirement already satisfied: huggingface-hub>=0.20.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (0.36.0)\n",
+      "Requirement already satisfied: typing_extensions>=4.5.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sentence-transformers) (4.11.0)\n",
+      "Requirement already satisfied: numpy>=1.19.5 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from scikit-learn) (1.26.4)\n",
+      "Requirement already satisfied: joblib>=1.2.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from scikit-learn) (1.4.2)\n",
+      "Requirement already satisfied: threadpoolctl>=3.1.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from scikit-learn) (3.5.0)\n",
+      "Requirement already satisfied: python-dateutil>=2.8.2 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from pandas) (2.9.0.post0)\n",
+      "Requirement already satisfied: pytz>=2020.1 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from pandas) (2024.1)\n",
+      "Requirement already satisfied: tzdata>=2022.7 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from pandas) (2023.3)\n",
+      "Requirement already satisfied: filelock in c:\\users\\dell\\anaconda3\\lib\\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (3.13.1)\n",
+      "Requirement already satisfied: fsspec>=2023.5.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2024.6.1)\n",
+      "Requirement already satisfied: packaging>=20.9 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (24.1)\n",
+      "Requirement already satisfied: pyyaml>=5.1 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (6.0.1)\n",
+      "Requirement already satisfied: requests in c:\\users\\dell\\anaconda3\\lib\\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2.32.3)\n",
+      "Requirement already satisfied: six>=1.5 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from python-dateutil>=2.8.2->pandas) (1.16.0)\n",
+      "Requirement already satisfied: sympy>=1.13.3 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from torch>=1.11.0->sentence-transformers) (1.14.0)\n",
+      "Requirement already satisfied: networkx>=2.5.1 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from torch>=1.11.0->sentence-transformers) (3.3)\n",
+      "Requirement already satisfied: jinja2 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from torch>=1.11.0->sentence-transformers) (3.1.4)\n",
+      "Requirement already satisfied: setuptools in c:\\users\\dell\\anaconda3\\lib\\site-packages (from torch>=1.11.0->sentence-transformers) (75.1.0)\n",
+      "Requirement already satisfied: colorama in c:\\users\\dell\\anaconda3\\lib\\site-packages (from tqdm->sentence-transformers) (0.4.6)\n",
+      "Requirement already satisfied: regex!=2019.12.17 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from transformers<6.0.0,>=4.41.0->sentence-transformers) (2024.9.11)\n",
+      "Requirement already satisfied: tokenizers<=0.23.0,>=0.22.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from transformers<6.0.0,>=4.41.0->sentence-transformers) (0.22.2)\n",
+      "Requirement already satisfied: safetensors>=0.4.3 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from transformers<6.0.0,>=4.41.0->sentence-transformers) (0.7.0)\n",
+      "Requirement already satisfied: mpmath<1.4,>=1.1.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from sympy>=1.13.3->torch>=1.11.0->sentence-transformers) (1.3.0)\n",
+      "Requirement already satisfied: MarkupSafe>=2.0 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from jinja2->torch>=1.11.0->sentence-transformers) (2.1.3)\n",
+      "Requirement already satisfied: charset-normalizer<4,>=2 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.3.2)\n",
+      "Requirement already satisfied: idna<4,>=2.5 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (3.7)\n",
+      "Requirement already satisfied: urllib3<3,>=1.21.1 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2.2.3)\n",
+      "Requirement already satisfied: certifi>=2017.4.17 in c:\\users\\dell\\anaconda3\\lib\\site-packages (from requests->huggingface-hub>=0.20.0->sentence-transformers) (2025.1.31)\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install sentence-transformers scikit-learn pandas\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "3a4b60bb-2973-4ae5-9813-a003e104219e",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>question</th>\n",
+       "      <th>answer</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>Please explain years old. please</td>\n",
+       "      <td>Most blood centers require donors to be at lea...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>Hi, what is the days for blood donation?</td>\n",
+       "      <td>The standard interval between whole blood dona...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>Hi, please explain anemia.</td>\n",
+       "      <td>If your hemoglobin is low, you may be deferred...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>Hi, how long should i wait regarding medication?</td>\n",
+       "      <td>Some medical conditions or medications may pre...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>Is it okay to donate blood if days? please</td>\n",
+       "      <td>The standard interval between whole blood dona...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                           question  \\\n",
+       "0                  Please explain years old. please   \n",
+       "1          Hi, what is the days for blood donation?   \n",
+       "2                        Hi, please explain anemia.   \n",
+       "3  Hi, how long should i wait regarding medication?   \n",
+       "4        Is it okay to donate blood if days? please   \n",
+       "\n",
+       "                                              answer  \n",
+       "0  Most blood centers require donors to be at lea...  \n",
+       "1  The standard interval between whole blood dona...  \n",
+       "2  If your hemoglobin is low, you may be deferred...  \n",
+       "3  Some medical conditions or medications may pre...  \n",
+       "4  The standard interval between whole blood dona...  "
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "df = pd.read_csv(\"blood_donation_1000_qa.csv\")\n",
+    "df.head()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1f591a84-b52e-4d1f-9ab9-53609036df32",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sentence_transformers import SentenceTransformer\n",
+    "\n",
+    "model = SentenceTransformer('all-MiniLM-L6-v2')\n",
+    "questions = df[\"question\"].tolist()\n",
+    "answers = df[\"answer\"].tolist()\n",
+    "\n",
+    "embeddings = model.encode(questions, show_progress_bar=False)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "64de5b8d-6277-4636-8aaa-f0d98e880cc4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import joblib\n",
+    "\n",
+    "np.save(\"question_embeddings.npy\", embeddings)\n",
+    "joblib.dump(model, \"sentence_transformer_model.pkl\")\n",
+    "df.to_csv(\"blood_donation_qa_clean.csv\", index=False)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "be776832-8a2b-42d2-8cb8-1e21a3f8a88d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The standard interval between whole blood donations is 56 days (8 weeks). For platelet donation it is usually 7 days, and for plasma it can be 28 days, but always follow your local blood center guidelines.\n",
+      "After donating blood, drink plenty of fluids and eat iron-rich foods such as red meat, beans, spinach, lentils, and fortified cereals. Also include vitamin C foods like oranges to help iron absorption.\n",
+      "Some medical conditions or medications may prevent donation. Conditions like anemia, infections, recent surgeries, or certain chronic diseases may require deferral. Always check with your blood center.\n",
+      "Hello! I can help you with blood donation related questions.\n",
+      "Sorry, I can only answer blood donation related questions.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import numpy as np\n",
+    "from sentence_transformers import SentenceTransformer\n",
+    "from sklearn.metrics.pairwise import cosine_similarity\n",
+    "import pandas as pd\n",
+    "\n",
+    "# Load dataset answers\n",
+    "df = pd.read_csv(\"blood_donation_qa_clean.csv\")\n",
+    "questions = df[\"question\"].tolist()\n",
+    "answers = df[\"answer\"].tolist()\n",
+    "\n",
+    "# Load saved model and embeddings\n",
+    "model = SentenceTransformer('all-MiniLM-L6-v2')\n",
+    "embeddings = np.load(\"question_embeddings.npy\")\n",
+    "\n",
+    "def chatbot_answer(user_question):\n",
+    "    q = user_question.lower().strip()\n",
+    "\n",
+    "    # Greeting handling\n",
+    "    greetings = [\"hello\", \"hi\", \"hey\", \"hii\", \"hlo\"]\n",
+    "    if q in greetings:\n",
+    "        return \"Hello! I can help you with blood donation related questions.\"\n",
+    "\n",
+    "    #  Embed user question\n",
+    "    user_emb = model.encode([user_question])\n",
+    "    sim = cosine_similarity(user_emb, embeddings)[0]\n",
+    "\n",
+    "    top_indices = sim.argsort()[-5:][::-1]  # top 5 matches\n",
+    "    top_scores = sim[top_indices]\n",
+    "\n",
+    "    # Intent-based matching with improved interval/gap detection\n",
+    "    for idx in top_indices:\n",
+    "        ans = answers[idx].lower()\n",
+    "        dataset_q = questions[idx].lower()\n",
+    "\n",
+    "        # a) Interval / Gap questions\n",
+    "        if \"gap\" in q or \"days\" in q or \"months\" in q or \"interval\" in q:\n",
+    "            if any(keyword in ans for keyword in [\"day\", \"week\", \"month\", \"gap\", \"interval\"]) or \\\n",
+    "               any(keyword in dataset_q for keyword in [\"day\", \"week\", \"month\", \"gap\", \"interval\"]):\n",
+    "                return answers[idx]\n",
+    "\n",
+    "        # b) After donation\n",
+    "        if \"after\" in q and \"donat\" in q:\n",
+    "            if \"after\" in ans:\n",
+    "                return answers[idx]\n",
+    "\n",
+    "        # c) Before donation\n",
+    "        if \"before\" in q and \"donat\" in q:\n",
+    "            if \"before\" in ans:\n",
+    "                return answers[idx]\n",
+    "\n",
+    "        # d) Low hemoglobin / eligibility\n",
+    "        if \"hemoglobin\" in q or \"eligible\" in q or \"can i donate\" in q:\n",
+    "            if \"hemoglobin\" in ans or \"eligible\" in ans:\n",
+    "                return answers[idx]\n",
+    "\n",
+    "    #  Confidence fallback\n",
+    "    if top_scores[0] < 0.65:\n",
+    "        return \"Sorry, I can only answer blood donation related questions.\"\n",
+    "\n",
+    "    #  Default: best semantic match\n",
+    "    return answers[top_indices[0]]\n",
+    "\n",
+    "# Test\n",
+    "print(chatbot_answer(\"In how many days gap should I donate blood?\"))\n",
+    "print(chatbot_answer(\"What should I eat after donating blood?\"))\n",
+    "print(chatbot_answer(\"Can I donate blood if I have Blood pressure?\"))\n",
+    "print(chatbot_answer(\"hello\"))\n",
+    "print(chatbot_answer(\"What is football?\"))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cdd5d26c-3ae7-490b-b7fe-beebfe436f1c",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:base] *",
+   "language": "python",
+   "name": "conda-base-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

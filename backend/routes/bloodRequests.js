@@ -396,7 +396,7 @@ router.post('/donor/:requestId/accept', async (req, res) => {
 router.post('/donor/:requestId/decline', async (req, res) => {
     try {
         const { requestId } = req.params;
-        const { donorId, donorName, donorEmail } = req.body;
+        const { donorId, donorName, donorEmail, donorPhone } = req.body;
         
         // Find blood request
         const bloodRequest = await BloodRequest.findById(requestId);
@@ -418,7 +418,7 @@ router.post('/donor/:requestId/decline', async (req, res) => {
             donorId,
             donorName,
             donorEmail,
-            donorPhone: '',
+            donorPhone: donorPhone || '', // Use donorPhone from request body
             responseDate: new Date(),
             status: 'Rejected'
         });
@@ -519,6 +519,20 @@ router.post('/:requestId/donation-complete', authenticateToken, async (req, res)
 
         await bloodRequest.save();
         console.log('Donation marked as complete');
+
+        // Update donor's donation count and badge
+        try {
+            const donor = await Donor.findById(donorId);
+            if (donor) {
+                donor.donationCount += 1;
+                donor.badge = donor.calculateBadge();
+                await donor.save();
+                console.log(`Updated donor ${donor.fullName}: donationCount = ${donor.donationCount}, badge = ${donor.badge}`);
+            }
+        } catch (donorError) {
+            console.error('Error updating donor donation count:', donorError);
+            // Continue with email sending even if donor update fails
+        }
 
         // Send thank you email to donor
         try {
@@ -703,6 +717,60 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error deleting blood request:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// GET /api/blood-requests/donors/ranking - Get donor ranking leaderboard
+router.get('/donors/ranking', async (req, res) => {
+    try {
+        console.log('Fetching donor ranking leaderboard...');
+        
+        // First, check if any donors exist
+        const totalDonors = await Donor.countDocuments();
+        const verifiedDonors = await Donor.countDocuments({ isVerified: true });
+        console.log(`Total donors: ${totalDonors}, Verified donors: ${verifiedDonors}`);
+        
+        // Get ALL donors sorted by donationCount in descending order (not just verified)
+        const donors = await Donor.find({})
+            .select('fullName bloodGroup donationCount badge isVerified')
+            .sort({ donationCount: -1 })
+            .limit(50); // Limit to top 50 donors
+        
+        console.log(`Found ${donors.length} donors for ranking`);
+        console.log('Donors:', donors.map(d => ({ 
+            name: d.fullName, 
+            count: d.donationCount, 
+            badge: d.badge,
+            verified: d.isVerified 
+        })));
+        
+        // Add rank numbers and format response
+        const rankedDonors = donors.map((donor, index) => ({
+            rank: index + 1,
+            fullName: donor.fullName,
+            bloodGroup: donor.bloodGroup,
+            donationCount: donor.donationCount,
+            badge: donor.badge,
+            isVerified: donor.isVerified
+        }));
+        
+        // Filter out donors with 0 donations (optional - keep for now to show all)
+        const filteredDonors = rankedDonors.filter(donor => donor.donationCount > 0);
+        
+        console.log(`Returning ${filteredDonors.length} ranked donors with donations`);
+        
+        res.json({
+            success: true,
+            data: filteredDonors,
+            totalDonors: filteredDonors.length
+        });
+        
+    } catch (error) {
+        console.error('Error fetching donor ranking:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
     }
 });
 

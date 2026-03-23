@@ -20,7 +20,8 @@ function Chatbot() {
 
   const checkAiServiceStatus = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/health', {
+      // Check if Python service is available through backend
+      const response = await fetch('/api/health/python', {
         method: 'GET',
         timeout: 3000
       })
@@ -56,8 +57,8 @@ function Chatbot() {
     setIsTyping(true)
 
     try {
-      // Call AI chatbot service
-      const response = await fetch('http://127.0.0.1:5000/chatbot', {
+      // Call backend chatbot API (which forwards to Python service)
+      const response = await fetch('/api/chatbot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
