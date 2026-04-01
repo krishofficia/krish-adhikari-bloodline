@@ -16,6 +16,141 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
+ * Send OTP email for registration verification
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.otp - 6-digit OTP code
+ * @param {string} options.role - User role (donor/organization)
+ * @returns {Promise} - Email sending result
+ */
+const sendOTP = async (options) => {
+    try {
+        const roleText = options.role === 'donor' ? 'Donor' : 'Organization';
+        
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Bloodline - Email Verification</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f4f4f4;
+                    }
+                    .container {
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .logo {
+                        font-size: 28px;
+                        font-weight: bold;
+                        color: #d32f2f;
+                        margin-bottom: 10px;
+                    }
+                    .otp-box {
+                        background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        margin: 20px 0;
+                    }
+                    .otp-code {
+                        font-size: 32px;
+                        font-weight: bold;
+                        letter-spacing: 8px;
+                        margin: 10px 0;
+                        background: rgba(255,255,255,0.2);
+                        padding: 15px;
+                        border-radius: 5px;
+                        display: inline-block;
+                    }
+                    .footer {
+                        text-align: center;
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #eee;
+                        color: #666;
+                        font-size: 14px;
+                    }
+                    .warning {
+                        background: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        color: #856404;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🩸 Bloodline</div>
+                        <h2>Email Verification</h2>
+                        <p>Complete your ${roleText} registration</p>
+                    </div>
+                    
+                    <p>Hello,</p>
+                    <p>Thank you for registering as a ${roleText} on Bloodline! To complete your registration, please use the following One-Time Password (OTP):</p>
+                    
+                    <div class="otp-box">
+                        <p>Your verification code is:</p>
+                        <div class="otp-code">${options.otp}</div>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Important:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>This OTP will expire in <strong>5 minutes</strong></li>
+                            <li>Do not share this code with anyone</li>
+                            <li>Enter this code on the verification page</li>
+                        </ul>
+                    </div>
+                    
+                    <p>If you didn't request this registration, please ignore this email.</p>
+                    
+                    <div class="footer">
+                        <p>Best regards,<br>
+                        The Bloodline Team<br>
+                        <small>🩸 Saving Lives, One Drop at a Time</small></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const mailOptions = {
+            from: `"Bloodline" <${process.env.EMAIL_USER || 'your-email@gmail.com'}>`,
+            to: options.to,
+            subject: `Bloodline - Verify Your ${roleText} Registration`,
+            html: htmlContent
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log(`✅ OTP email sent to ${options.to}:`, result.messageId);
+        
+        return { success: true, messageId: result.messageId };
+    } catch (error) {
+        console.error(`❌ Failed to send OTP email to ${options.to}:`, error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
  * Send email notification to donor
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
@@ -228,8 +363,147 @@ const generateBloodRequestEmail = (donor, bloodRequest, organization) => {
     `;
 };
 
+/**
+ * Send password reset email
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.resetLink - Password reset link
+ * @param {string} options.userName - User's name (optional)
+ * @returns {Promise} - Email sending result
+ */
+const sendPasswordResetEmail = async (options) => {
+    try {
+        const { to, resetLink, userName } = options;
+        
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: to,
+            subject: 'Reset Your Bloodline Password',
+            html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Reset Your Password</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f4f4f4;
+                    }
+                    .container {
+                        background-color: #ffffff;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                        border-top: 5px solid #d32f2f;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .logo {
+                        color: #d32f2f;
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                    }
+                    .title {
+                        color: #333;
+                        font-size: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .content {
+                        margin-bottom: 30px;
+                    }
+                    .reset-button {
+                        display: inline-block;
+                        background-color: #d32f2f;
+                        color: white;
+                        padding: 12px 30px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        text-align: center;
+                        margin: 20px 0;
+                    }
+                    .reset-button:hover {
+                        background-color: #b71c1c;
+                    }
+                    .security-info {
+                        background-color: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        padding: 15px;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                    }
+                    .footer {
+                        text-align: center;
+                        color: #666;
+                        font-size: 12px;
+                        margin-top: 30px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🩸 Bloodline</div>
+                        <h1 class="title">Reset Your Password</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p>Hello ${userName || 'User'},</p>
+                        
+                        <p>We received a request to reset your password for your Bloodline account. Click the button below to reset your password:</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="${resetLink}" class="reset-button">Reset Password</a>
+                        </div>
+                        
+                        <p>Or copy and paste this link into your browser:</p>
+                        <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace;">
+                            ${resetLink}
+                        </p>
+                        
+                        <div class="security-info">
+                            <p><strong>⚠️ Security Information:</strong></p>
+                            <ul>
+                                <li>This link will expire in 30 minutes</li>
+                                <li>If you didn't request this password reset, please ignore this email</li>
+                                <li>Never share this link with anyone</li>
+                            </ul>
+                        </div>
+                        
+                        <p>If you have any questions, please contact our support team.</p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>© 2026 Bloodline. All rights reserved.</p>
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
+    sendOTP,
     sendNotification,
     generateBloodRequestEmail,
-    generateBloodRequestEmail
+    sendPasswordResetEmail
 };

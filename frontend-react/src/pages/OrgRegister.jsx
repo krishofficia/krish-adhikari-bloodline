@@ -1,7 +1,100 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
+// Add custom CSS for form styling to match blood group dropdown
+const orgRegisterFormStyles = `
+  .auth-form .form-group input,
+  .auth-form .form-group select,
+  .auth-form .form-group textarea {
+    padding: 0.875rem;
+    border: 2px solid #d32f2f !important;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+    background: #ffffff;
+    color: #212121 !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .auth-form .form-group input:focus,
+  .auth-form .form-group select:focus,
+  .auth-form .form-group textarea:focus {
+    outline: none;
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  }
+  
+  .auth-form .form-group input::placeholder,
+  .auth-form .form-group textarea::placeholder {
+    color: #999;
+  }
+  
+  .auth-form .form-group input[type="text"],
+  .auth-form .form-group input[type="email"],
+  .auth-form .form-group input[type="tel"],
+  .auth-form .form-group input[type="password"],
+  .auth-form .form-group select,
+  .auth-form .form-group textarea {
+    border: 2px solid #d32f2f !important;
+    background: #ffffff !important;
+    color: #212121 !important;
+  }
+  
+  .auth-form .form-group input[type="text"]:focus,
+  .auth-form .form-group input[type="email"]:focus,
+  .auth-form .form-group input[type="tel"]:focus,
+  .auth-form .form-group input[type="password"]:focus,
+  .auth-form .form-group select:focus,
+  .auth-form .form-group textarea:focus {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  }
+  
+  /* Override any browser default styling for password inputs */
+  .auth-form .form-group input[type="password"]::-webkit-credentials-auto-fill-button,
+  .auth-form .form-group input[type="password"]::-webkit-contacts-auto-fill-button {
+    display: none !important;
+  }
+  
+  /* Password toggle styles */
+  .password-input-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .password-input-container input {
+    padding-right: 3rem !important;
+  }
+  
+  .password-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+  }
+  
+  .password-toggle-btn:hover {
+    color: #d32f2f;
+  }
+  
+  .password-toggle-btn:focus {
+    outline: none;
+    color: #d32f2f;
+  }
+`;
 
 function OrgRegister() {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     organizationName: '',
     email: '',
@@ -15,6 +108,18 @@ function OrgRegister() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
+  // Inject custom CSS styles
+  React.useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = orgRegisterFormStyles
+    document.head.appendChild(styleElement)
+    
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -46,42 +151,78 @@ function OrgRegister() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/register', {
+      // Validate form data
+      if (!formData.organizationName || !formData.email || !formData.password || 
+          !formData.phone || !formData.address || !formData.licenseNumber || 
+          !formData.panNumber || !formData.panCardImage) {
+        setError('Please fill all required fields')
+        setLoading(false)
+        return
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        setError('Please enter a valid email address')
+        setLoading(false)
+        return
+      }
+
+      // Validate password
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long')
+        setLoading(false)
+        return
+      }
+
+      // Send OTP for registration
+      const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: formData.organizationName,
           email: formData.email,
-          password: formData.password,
+          role: 'organization',
+          name: formData.organizationName,
           phone: formData.phone,
           address: formData.address,
           licenseNumber: formData.licenseNumber,
           panNumber: formData.panNumber,
-          panCardImage: formData.panCardImage
+          panCardImage: formData.panCardImage,
+          password: formData.password
         })
       })
 
       const data = await response.json()
 
-      if (response.ok) {
-        setSuccess('Organization registration successful! Your account is pending verification.')
-        setFormData({
-          organizationName: '',
-          email: '',
-          phone: '',
-          licenseNumber: '',
-          panNumber: '',
-          address: '',
-          password: '',
-          panCardImage: null
-        })
+      if (response.ok && data.success) {
+        setSuccess('OTP sent to your email! Redirecting to verification page...')
+        
+        // Navigate to OTP verification page with registration data
+        setTimeout(() => {
+          navigate('/verify-otp', {
+            state: {
+              registrationData: {
+                email: formData.email,
+                role: 'organization',
+                name: formData.organizationName,
+                phone: formData.phone,
+                address: formData.address,
+                licenseNumber: formData.licenseNumber,
+                panNumber: formData.panNumber,
+                panCardImage: formData.panCardImage,
+                password: formData.password
+              }
+            }
+          })
+        }, 1500)
       } else {
-        setError(data.message || 'Registration failed. Please try again.')
+        setError(data.message || 'Failed to send OTP. Please try again.')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Network error. Please try again.')
+      console.error('Send OTP error:', error)
     } finally {
       setLoading(false)
     }
@@ -101,7 +242,6 @@ function OrgRegister() {
             <li><Link to="/login">Login</Link></li>
             <li><Link to="/register">Register</Link></li>
             <li><Link to="/org-register" className="active">Register Organization</Link></li>
-            <li><Link to="/admin"><i className="fas fa-shield-alt"></i> Admin</Link></li>
           </ul>
           <div className="hamburger">
             <i className="fas fa-bars"></i>
@@ -255,15 +395,25 @@ function OrgRegister() {
                   <i className="fas fa-lock"></i>
                   Organization Password
                 </label>
-                <input 
-                  type="password" 
-                  id="orgPassword" 
-                  name="password" 
-                  required 
-                  placeholder="Create a secure password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+                <div className="password-input-container">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    id="orgPassword" 
+                    name="password" 
+                    required 
+                    placeholder="Create a secure password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={showPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </button>
+                </div>
                 <small style={{color: 'var(--text-light)', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block'}}>
                   Choose a strong password (at least 6 characters)
                 </small>

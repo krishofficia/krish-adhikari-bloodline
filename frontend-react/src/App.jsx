@@ -10,6 +10,9 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import OrgDashboard from './pages/OrgDashboard.jsx'
 import Chatbot from './pages/Chatbot.jsx'
 import DonorResponse from './pages/DonorResponse.jsx'
+import OTPVerification from './components/OTPVerification.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/org-register" element={<OrgRegister />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-otp" element={<OTPVerification />} />
         <Route path="/donor-dashboard" element={<DonorDashboard />} />
         <Route path="/donor/dashboard" element={<DonorDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />

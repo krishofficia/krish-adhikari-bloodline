@@ -31,6 +31,7 @@ function Chatbot() {
         setAiServiceStatus('offline')
       }
     } catch (error) {
+      // Silently set offline without console errors
       setAiServiceStatus('offline')
     }
   }
@@ -141,7 +142,6 @@ function Chatbot() {
             <li><Link to="/login">Login</Link></li>
             <li><Link to="/register">Register</Link></li>
             <li><Link to="/org-register">Register Organization</Link></li>
-            <li><Link to="/admin"><i className="fas fa-shield-alt"></i> Admin</Link></li>
             <li><Link to="/chatbot" className="active"><i className="fas fa-robot"></i> Chatbot</Link></li>
           </ul>
           <div className="hamburger">

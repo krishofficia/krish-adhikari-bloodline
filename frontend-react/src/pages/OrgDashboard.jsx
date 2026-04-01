@@ -1,6 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import ChangePassword from '../components/ChangePassword'
+import '../components/ChangePasswordButton.css'
+
+// Add custom CSS for form styling
+const formStyles = `
+  .request-form .form-group input,
+  .request-form .form-group select {
+    padding: 0.875rem;
+    border: 2px solid #d32f2f !important;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+    background: #ffffff;
+    color: #212121 !important;
+  }
+  
+  .request-form .form-group input:focus,
+  .request-form .form-group select:focus {
+    outline: none;
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  }
+  
+  .request-form .form-group input::placeholder {
+    color: #999;
+  }
+  
+  /* Specific styling for date input */
+  .request-form .form-group input[type="date"] {
+    color: #212121 !important;
+  }
+  
+  .request-form .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    color: #d32f2f;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .request-form .form-group input[type="date"]::-webkit-inner-spin-button,
+  .request-form .form-group input[type="date"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  /* Firefox date input styling */
+  .request-form .form-group input[type="date"]::-moz-focus-inner {
+    border: 0;
+  }
+`;
 
 function OrgDashboard() {
   const [requestData, setRequestData] = useState({
@@ -25,6 +75,18 @@ function OrgDashboard() {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersRef = useRef([])
+  const [showChangePassword, setShowChangePassword] = useState(false)
+
+  // Inject custom CSS styles
+  useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = formStyles
+    document.head.appendChild(styleElement)
+    
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
 
   useEffect(() => {
     loadDashboardData()
@@ -169,17 +231,36 @@ function OrgDashboard() {
           
           // Create popup content
           const popupContent = `
-            <div style="min-width: 200px;">
-              <h4 style="margin: 0 0 8px 0; color: #333;">${donor.name}</h4>
-              <p style="margin: 4px 0; font-size: 14px;"><strong>Blood Group:</strong> ${donor.bloodGroup}</p>
-              <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${donor.email}</p>
-              <p style="margin: 4px 0; font-size: 14px;"><strong>Phone:</strong> ${donor.phone}</p>
-              <p style="margin: 4px 0; font-size: 14px;"><strong>Availability:</strong> 
-                <span style="color: ${donor.availability === 'available' ? '#28a745' : '#dc3545'}; font-weight: bold;">
-                  ${donor.availability === 'available' ? 'Available' : 'Not Available'}
+            <div style="min-width: 220px; font-family: Arial, sans-serif;">
+              <h4 style="margin: 0 0 12px 0; color: #d32f2f; font-size: 16px; border-bottom: 2px solid #d32f2f; padding-bottom: 6px;">${donor.name}</h4>
+              
+              <div style="margin-bottom: 8px;">
+                <span style="display: inline-block; background: #d32f2f; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${donor.bloodGroup}</span>
+              </div>
+              
+              <p style="margin: 6px 0; font-size: 13px; color: #555;">
+                <strong style="color: #333;">📧 Email:</strong> ${donor.email}
+              </p>
+              
+              <p style="margin: 6px 0; font-size: 13px; color: #555;">
+                <strong style="color: #333;">📞 Phone:</strong> ${donor.phone}
+              </p>
+              
+              <p style="margin: 6px 0; font-size: 13px; color: #555;">
+                <strong style="color: #333;">📍 Availability:</strong> 
+                <span style="color: ${donor.availability === 'available' ? '#28a745' : '#dc3545'}; font-weight: bold; margin-left: 4px;">
+                  ${donor.availability === 'available' ? '✅ Available' : '❌ Not Available'}
                 </span>
               </p>
-              <p style="margin: 4px 0; font-size: 14px;"><strong>Last Donation:</strong> ${donor.lastDonation}</p>
+              
+              <div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #d32f2f;">
+                <p style="margin: 0; font-size: 13px; color: #555;">
+                  <strong style="color: #333;">🩸 Last Donation:</strong> 
+                  <span style="color: ${donor.lastDonation === 'No donations yet' ? '#6c757d' : '#d32f2f'}; font-weight: bold; margin-left: 4px;">
+                    ${donor.lastDonation}
+                  </span>
+                </p>
+              </div>
             </div>
           `
           
@@ -653,7 +734,13 @@ function OrgDashboard() {
           <ul className="nav-menu">
             <li><a href="#home">Home</a></li>
             <li>
-              <button onClick={handleLogout} className="logout-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setShowChangePassword(true)} className="change-password-link" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', padding: '0.5rem 1rem', fontWeight: '500' }}>
+                <i className="fas fa-key"></i>
+                Change Password
+              </button>
+            </li>
+            <li>
+              <button onClick={handleLogout} className="logout-link" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontWeight: '500' }}>
                 <i className="fas fa-sign-out-alt"></i>
                 Logout
               </button>
@@ -807,13 +894,13 @@ function OrgDashboard() {
                   </div>
                 )}
 
-                <div className="form-actions">
+                <div className="form-actions" style={{ justifyContent: 'flex-start' }}>
                   <button type="submit" className="btn btn-primary" disabled={loading}>
                     <i className="fas fa-paper-plane"></i>
                     {loading ? 'Saving...' : (editingRequest ? 'Update Request' : 'Create Request')}
                   </button>
                   {editingRequest && (
-                    <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+                    <button type="button" className="btn btn-secondary" onClick={handleCancel} style={{ marginLeft: '1rem' }}>
                       <i className="fas fa-times"></i>
                       Cancel
                     </button>
@@ -1052,7 +1139,7 @@ function OrgDashboard() {
               </div>
               
               <div className="donor-responses">
-                <h4>Donors Who Accepted ({selectedRequest.donorResponses?.length || 0})</h4>
+                <h4>Donors Who Responded ({selectedRequest.donorResponses?.length || 0})</h4>
                 {selectedRequest.donorResponses && selectedRequest.donorResponses.length > 0 ? (
                   <table className="donor-responses-table">
                     <thead>
@@ -1117,6 +1204,17 @@ function OrgDashboard() {
           <p>&copy; 2024 Bloodline. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <ChangePassword 
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            console.log('Password changed successfully');
+            setShowChangePassword(false);
+          }}
+        />
+      )}
     </div>
   )
 }

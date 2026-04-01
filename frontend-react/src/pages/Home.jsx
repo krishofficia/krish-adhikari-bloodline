@@ -16,7 +16,6 @@ function Home() {
             <li><Link to="/login">Login</Link></li>
             <li><Link to="/register">Register Donor</Link></li>
             <li><Link to="/org-register">Register Org</Link></li>
-            <li><Link to="/admin"><i className="fas fa-shield-alt"></i> Admin</Link></li>
             <li><Link to="/chatbot"><i className="fas fa-robot"></i> Chatbot</Link></li>
           </ul>
           <div className="hamburger">
@@ -36,7 +35,7 @@ function Home() {
                 <i className="fas fa-tint"></i>
                 Donate Blood
               </Link>
-              <Link to="/login" className="btn btn-secondary">
+              <Link to="/org-register" className="btn btn-primary">
                 <i className="fas fa-hand-holding-heart"></i>
                 Request Blood
               </Link>

@@ -1,8 +1,78 @@
 import React, { useState, useEffect } from 'react'
 import '../admin-styles.css'
 
+// Add custom CSS for form styling to match blood group dropdown
+const editDonorFormStyles = `
+  .modal-content .form-group input,
+  .modal-content .form-group select {
+    padding: 0.875rem;
+    border: 2px solid #d32f2f !important;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+    background: #ffffff;
+    color: #212121 !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .modal-content .form-group input:focus,
+  .modal-content .form-group select:focus {
+    outline: none;
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  }
+  
+  .modal-content .form-group input::placeholder {
+    color: #999;
+  }
+  
+  .modal-content .form-group input[type="text"],
+  .modal-content .form-group input[type="email"],
+  .modal-content .form-group input[type="tel"] {
+    border: 2px solid #d32f2f !important;
+    background: #ffffff !important;
+    color: #212121 !important;
+  }
+  
+  .modal-content .form-group input[type="text"]:focus,
+  .modal-content .form-group input[type="email"]:focus,
+  .modal-content .form-group input[type="tel"]:focus {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  }
+  
+  .modal-content .form-group select {
+    border: 2px solid #d32f2f !important;
+    background: #ffffff !important;
+    color: #212121 !important;
+  }
+  
+  .modal-content .form-group select:focus {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  }
+  
+  .modal-content .form-group select option {
+    background: #ffffff;
+    color: #212121;
+  }
+`;
+
 function AdminDashboard() {
   console.log('AdminDashboard component rendering...')
+  
+  // Inject custom CSS styles
+  useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = editDonorFormStyles
+    document.head.appendChild(styleElement)
+    
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
   
   const [activeTab, setActiveTab] = useState('pending')
   const [stats, setStats] = useState({
@@ -115,12 +185,6 @@ function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    window.location.href = '/login'
-  }
-
   const handleTabChange = (tabName) => {
     setActiveTab(tabName)
   }
@@ -157,6 +221,12 @@ function AdminDashboard() {
     console.log('Reject button clicked for org:', org)
     setSelectedItem(org)
     setShowRejectModal(true)
+  }
+
+  const handleEditOrg = (org) => {
+    console.log('Edit button clicked for org:', org)
+    setSelectedItem(org)
+    setShowEditOrgModal(true)
   }
 
   const handleRejectSubmit = async (reason) => {
@@ -200,7 +270,9 @@ function AdminDashboard() {
   const handleUpdateDonor = async (donorData) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/admin/update-donor/${selectedItem._id}`, {
+      console.log('Updating donor:', selectedItem._id, donorData)
+      
+      const response = await fetch(`/api/admin/donors/${selectedItem._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -209,13 +281,26 @@ function AdminDashboard() {
         body: JSON.stringify(donorData)
       })
 
+      console.log('Update response status:', response.status)
+
       if (response.ok) {
+        const data = await response.json()
+        console.log('Update successful:', data)
+        
         setShowEditDonorModal(false)
         setSelectedItem(null)
         loadDashboardData() // Refresh data
+        
+        // Show success message
+        alert('Donor updated successfully!')
+      } else {
+        const errorData = await response.json()
+        console.error('Update failed:', errorData)
+        alert(`Failed to update donor: ${errorData.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error updating donor:', error)
+      alert('Error updating donor. Please try again.')
     }
   }
 
@@ -247,18 +332,53 @@ function AdminDashboard() {
         }
       }
     } catch (error) {
-      console.error('Error deleting organization:', error)
+      console.error('Delete error:', error)
     }
   }
 
-  const handleEditOrg = (org) => {
-    setSelectedItem(org)
-    setShowEditOrgModal(true)
+  const handleDeleteDonor = async (donorId) => {
+    console.log('Delete button clicked for donorId:', donorId)
+    if (!confirm('Are you sure you want to delete this donor?')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      console.log('Making delete request to:', `/api/admin/donors/${donorId}`)
+      const response = await fetch(`/api/admin/donors/${donorId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      console.log('Delete response status:', response.status)
+      
+      if (response.ok) {
+        console.log('Delete successful')
+        loadDashboardData() // Refresh data
+      } else {
+        try {
+          const errorData = await response.json()
+          console.error('Delete failed:', errorData.message)
+        } catch (jsonError) {
+          console.error('Delete failed - non-JSON response:', await response.text())
+        }
+      }
+    } catch (error) {
+      console.error('Delete error:', error)
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    window.location.href = '/login'
   }
 
   const handleUpdateOrg = async (formData) => {
     try {
       const token = localStorage.getItem('token')
+      console.log('Updating organization:', selectedItem._id, formData)
+      
       const response = await fetch(`/api/admin/organizations/${selectedItem._id}`, {
         method: 'PUT',
         headers: {
@@ -268,28 +388,27 @@ function AdminDashboard() {
         body: JSON.stringify(formData)
       })
 
+      console.log('Update organization response status:', response.status)
+
       if (response.ok) {
-        // Update the organization in the local state
-        setOrganizations(prev => prev.map(org => 
-          org._id === selectedItem._id ? { ...org, ...formData } : org
-        ))
+        const data = await response.json()
+        console.log('Organization update successful:', data)
+        
         setShowEditOrgModal(false)
         setSelectedItem(null)
+        loadDashboardData() // Refresh data
+        
         alert('Organization updated successfully!')
       } else {
         const errorData = await response.json()
-        alert('Failed to update organization: ' + errorData.message)
+        console.error('Organization update failed:', errorData)
+        alert(`Failed to update organization: ${errorData.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error updating organization:', error)
-      alert('Error updating organization')
+      alert('Error updating organization. Please try again.')
     }
   }
-
-  const filteredPendingOrgs = pendingOrgs.filter(org => 
-    (org.name && org.name.toLowerCase().includes(searchTerms.pending.toLowerCase())) ||
-    (org.email && org.email.toLowerCase().includes(searchTerms.pending.toLowerCase()))
-  )
 
   const filteredOrganizations = organizations.filter(org => 
     (org.name && org.name.toLowerCase().includes(searchTerms.organizations.toLowerCase())) ||
@@ -299,6 +418,11 @@ function AdminDashboard() {
   const filteredDonors = donors.filter(donor => 
     (donor.fullName && donor.fullName.toLowerCase().includes(searchTerms.donors.toLowerCase())) ||
     (donor.email && donor.email.toLowerCase().includes(searchTerms.donors.toLowerCase()))
+  )
+
+  const filteredPendingOrgs = pendingOrgs.filter(org => 
+    (org.name && org.name.toLowerCase().includes(searchTerms.pending.toLowerCase())) ||
+    (org.email && org.email.toLowerCase().includes(searchTerms.pending.toLowerCase()))
   )
 
   if (loading) {
@@ -652,6 +776,7 @@ function AdminDashboard() {
                 location: e.target.location.value,
                 availability: e.target.availability.value
               }
+              console.log('Form data being submitted:', formData)
               handleUpdateDonor(formData)
             }}>
               <div className="form-group">

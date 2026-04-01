@@ -1,21 +1,131 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
+// Add custom CSS for form styling to match blood group dropdown
+const loginFormStyles = `
+  .auth-form .form-group input {
+    padding: 0.875rem;
+    border: 2px solid #d32f2f !important;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+    background: #ffffff;
+    color: #212121 !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .auth-form .form-group input:focus {
+    outline: none;
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  }
+  
+  .auth-form .form-group input::placeholder {
+    color: #999;
+  }
+  
+  .auth-form .form-group input[type="email"],
+  .auth-form .form-group input[type="password"],
+  .auth-form .form-group input[type="text"] {
+    border: 2px solid #d32f2f !important;
+    background: #ffffff !important;
+    color: #212121 !important;
+  }
+  
+  .auth-form .form-group input[type="email"]:focus,
+  .auth-form .form-group input[type="password"]:focus,
+  .auth-form .form-group input[type="text"]:focus {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  }
+  
+  /* Password toggle styles */
+  .password-input-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .password-input-container input {
+    padding-right: 3rem !important;
+  }
+  
+  .password-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+  }
+  
+  .password-toggle-btn:hover {
+    color: #d32f2f;
+  }
+  
+  .password-toggle-btn:focus {
+    outline: none;
+    color: #d32f2f;
+  }
+  
+  .forgot-password-link {
+    color: #d32f2f;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+  }
+  
+  .forgot-password-link:hover {
+    color: #b71c1c;
+    text-decoration: underline;
+  }
+  
+  /* Override any browser default styling for password inputs */
+  .auth-form .form-group input[type="password"]::-webkit-credentials-auto-fill-button,
+  .auth-form .form-group input[type="password"]::-webkit-contacts-auto-fill-button {
+    display: none !important;
+  }
+`;
+
 function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: ''
+    role: 'donor'
   })
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
-  // Check if there's a return URL and message from DonorResponse or Homepage
+  // Inject custom CSS styles
+  useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = loginFormStyles
+    document.head.appendChild(styleElement)
+    
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
+
+  // Check if there's a return URL and message from DonorResponse, Homepage, or Reset Password
   useEffect(() => {
     if (location.state?.message) {
-      setError(location.state.message)
+      if (location.state.message.includes('Password reset successful')) {
+        setSuccess(location.state.message)
+      } else {
+        setError(location.state.message)
+      }
     }
   }, [location.state])
 
@@ -36,17 +146,27 @@ function Login() {
       // Use different endpoints based on role
       const loginEndpoint = formData.role === 'donor' 
         ? '/api/auth/login-donor' 
-        : '/api/auth/login'
+        : formData.role === 'organization'
+        ? '/api/auth/login'
+        : '/api/admin/login'
+      
+      // For admin, send username field, for others send email
+      const requestBody = {
+        password: formData.password
+      }
+      
+      if (formData.role === 'admin') {
+        requestBody.username = formData.email // Use email field as username for admin
+      } else {
+        requestBody.email = formData.email
+      }
       
       const response = await fetch(loginEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+        body: JSON.stringify(requestBody)
       })
 
       const data = await response.json()
@@ -63,6 +183,9 @@ function Login() {
         } else if (formData.role === 'organization') {
           localStorage.setItem('user', JSON.stringify(data.organization))
           navigate('/org-dashboard')
+        } else if (formData.role === 'admin') {
+          localStorage.setItem('user', JSON.stringify(data.admin))
+          window.location.href = '/admin-dashboard'
         }
       } else {
         setError(data.message || 'Login failed. Please try again.')
@@ -87,7 +210,6 @@ function Login() {
             <li><Link to="/">Home</Link></li>
             <li><Link to="/login" className="active">Login</Link></li>
             <li><Link to="/register">Register</Link></li>
-            <li><Link to="/admin"><i className="fas fa-shield-alt"></i> Admin</Link></li>
           </ul>
           <div className="hamburger">
             <i className="fas fa-bars"></i>
@@ -117,21 +239,29 @@ function Login() {
                 </p>
               )}
               <p style={{fontSize: '0.9rem', color: 'var(--text-light)', marginTop: '0.5rem'}}>
-                <i className="fas fa-info-circle"></i> Use your donor credentials to continue
+                <i className="fas fa-info-circle"></i> 
+                {formData.role === 'admin' 
+                  ? 'Use your admin credentials to access the dashboard'
+                  : formData.role === 'organization'
+                  ? 'Use your organization credentials to continue'
+                  : 'Use your donor credentials to continue'
+                }
               </p>
             </div>
             
             <form onSubmit={handleSubmit} className="auth-form">
               <div className="form-group input-icon">
                 <i className="fas fa-envelope"></i>
-                <label htmlFor="email">Email Address</label>
+                <label htmlFor="email">
+                  {formData.role === 'admin' ? 'Username' : 'Email Address'}
+                </label>
                 <input 
-                  type="email" 
+                  type={formData.role === 'admin' ? 'text' : 'email'} 
                   id="email" 
                   name="email" 
-                  autoComplete="email" 
+                  autoComplete={formData.role === 'admin' ? 'username' : 'email'} 
                   required 
-                  placeholder="Enter your email"
+                  placeholder={formData.role === 'admin' ? 'Enter admin username' : 'Enter your email'}
                   value={formData.email}
                   onChange={handleChange}
                 />
@@ -140,16 +270,26 @@ function Login() {
               <div className="form-group input-icon">
                 <i className="fas fa-lock"></i>
                 <label htmlFor="password">Password</label>
-                <input 
-                  type="password" 
-                  id="password" 
-                  name="password" 
-                  autoComplete="current-password" 
-                  required 
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+                <div className="password-input-container">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    id="password" 
+                    name="password" 
+                    autoComplete="current-password" 
+                    required 
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={showPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </button>
+                </div>
               </div>
 
               <div className="form-group">
@@ -167,12 +307,20 @@ function Login() {
                   <option value="">Select your role</option>
                   <option value="donor">Donor</option>
                   <option value="organization">Organization</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
 
               {error && (
                 <div className="error-message show">
                   {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="success-message show">
+                  <i className="fas fa-check-circle"></i>
+                  {success}
                 </div>
               )}
 
@@ -186,6 +334,11 @@ function Login() {
                 <p style={{marginTop: '0.5rem'}}>
                   <Link to="/register">Register as Donor</Link> | 
                   <Link to="/org-register">Register Organization</Link>
+                </p>
+                <p style={{marginTop: '1rem'}}>
+                  <Link to="/forgot-password" className="forgot-password-link">
+                    Forgot Password?
+                  </Link>
                 </p>
               </div>
             </form>

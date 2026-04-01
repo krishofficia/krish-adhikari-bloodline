@@ -3,6 +3,7 @@ const router = express.Router();
 const BloodRequest = require('../models/BloodRequest');
 const Organization = require('../models/Organization');
 const Donor = require('../models/Donor');
+const Donation = require('../models/Donation');
 const jwt = require('jsonwebtoken');
 const { sendNotification, generateBloodRequestEmail } = require('../utils/mailService');
 
@@ -520,6 +521,32 @@ router.post('/:requestId/donation-complete', authenticateToken, async (req, res)
         await bloodRequest.save();
         console.log('Donation marked as complete');
 
+        // Create donation record in the new Donation model
+        try {
+            const Donation = require('../models/Donation');
+            const donationRecord = {
+                donorId: donorId,
+                donorName: donorResponse.donorName,
+                donorEmail: donorResponse.donorEmail,
+                donorPhone: donorResponse.donorPhone,
+                organizationId: bloodRequest.organizationId,
+                organizationName: bloodRequest.organizationName?.name || bloodRequest.hospitalName,
+                bloodGroup: bloodRequest.bloodGroup,
+                location: bloodRequest.location,
+                units: bloodRequest.quantity,
+                donationDate: donorResponse.responseDate,
+                completionDate: donorResponse.completionDate || new Date(),
+                status: 'Completed',
+                originalRequestId: bloodRequest._id
+            };
+            
+            await Donation.create(donationRecord);
+            console.log('Created donation record for completed donation');
+        } catch (donationError) {
+            console.error('Error creating donation record:', donationError);
+            // Continue with donor update even if donation record creation fails
+        }
+
         // Update donor's donation count and badge
         try {
             const donor = await Donor.findById(donorId);
@@ -618,18 +645,57 @@ router.get('/available-donors', authenticateToken, async (req, res) => {
 
         console.log(`Found ${availableDonors.length} available donors`);
 
-        // Transform the data to match frontend expectations
-        const transformedDonors = availableDonors.map(donor => ({
-            _id: donor._id,
-            name: donor.fullName,
-            email: donor.email,
-            phone: donor.phone,
-            bloodGroup: donor.bloodGroup,
-            location: donor.location,
-            available: donor.availability === 'available'
-        }));
+        // Get last donation date for each donor
+        const transformedDonors = await Promise.all(
+            availableDonors.map(async (donor) => {
+                // Find the most recent completed donation for this donor
+                const lastDonation = await Donation.findOne({ 
+                    donorId: donor._id,
+                    status: 'Completed'
+                })
+                .sort({ donationDate: -1 })
+                .select('donationDate');
 
-        console.log('Transformed donors:', transformedDonors);
+                // Format the last donation date
+                let lastDonationText = 'No donations yet';
+                if (lastDonation && lastDonation.donationDate) {
+                    const donationDate = new Date(lastDonation.donationDate);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - donationDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 0) {
+                        lastDonationText = 'Today';
+                    } else if (diffDays === 1) {
+                        lastDonationText = 'Yesterday';
+                    } else if (diffDays < 7) {
+                        lastDonationText = `${diffDays} days ago`;
+                    } else if (diffDays < 30) {
+                        const weeks = Math.floor(diffDays / 7);
+                        lastDonationText = `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+                    } else if (diffDays < 365) {
+                        const months = Math.floor(diffDays / 30);
+                        lastDonationText = `${months} month${months > 1 ? 's' : ''} ago`;
+                    } else {
+                        const years = Math.floor(diffDays / 365);
+                        lastDonationText = `${years} year${years > 1 ? 's' : ''} ago`;
+                    }
+                }
+
+                return {
+                    _id: donor._id,
+                    name: donor.fullName,
+                    email: donor.email,
+                    phone: donor.phone,
+                    bloodGroup: donor.bloodGroup,
+                    location: donor.location,
+                    available: donor.availability === 'available',
+                    lastDonation: lastDonationText
+                };
+            })
+        );
+
+        console.log('Transformed donors with last donation info:', transformedDonors);
 
         res.json({
             success: true,
@@ -706,6 +772,31 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         // Check if the request belongs to the organization
         if (bloodRequest.organizationId.toString() !== organizationId) {
             return res.status(403).json({ message: 'Access denied' });
+        }
+
+        // Create donation records for completed donations before deleting the request
+        const Donation = require('../models/Donation');
+        const completedResponses = bloodRequest.donorResponses.filter(response => response.status === 'Completed');
+        
+        if (completedResponses.length > 0) {
+            const donationRecords = completedResponses.map(response => ({
+                donorId: response.donorId,
+                donorName: response.donorName,
+                donorEmail: response.donorEmail,
+                donorPhone: response.donorPhone,
+                organizationId: bloodRequest.organizationId,
+                organizationName: bloodRequest.organizationName?.name || bloodRequest.hospitalName,
+                bloodGroup: bloodRequest.bloodGroup,
+                location: bloodRequest.location,
+                units: bloodRequest.quantity,
+                donationDate: response.responseDate,
+                completionDate: response.completionDate || new Date(),
+                status: 'Completed',
+                originalRequestId: bloodRequest._id
+            }));
+            
+            await Donation.insertMany(donationRecords);
+            console.log(`Created ${donationRecords.length} donation records before deleting blood request`);
         }
 
         await BloodRequest.findByIdAndDelete(requestId);

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import ChangePassword from '../components/ChangePassword'
+import '../components/ChangePasswordButton.css'
 
 function DonorDashboard() {
   const [donorData, setDonorData] = useState({
@@ -20,6 +22,7 @@ function DonorDashboard() {
     rank: 0
   })
   const [leaderboard, setLeaderboard] = useState([])
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
     // Load donor data from localStorage or API
@@ -542,6 +545,15 @@ function DonorDashboard() {
                   </button>
                 </label>
               </div>
+              <div className="profile-actions">
+                <button 
+                  onClick={() => setShowChangePassword(true)}
+                  className="btn btn-change-password"
+                >
+                  <i className="fas fa-key"></i>
+                  Change Password
+                </button>
+              </div>
             </div>
           </div>
 
@@ -793,6 +805,17 @@ function DonorDashboard() {
           <p>&copy; 2024 Bloodline. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <ChangePassword 
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            console.log('Password changed successfully');
+            setShowChangePassword(false);
+          }}
+        />
+      )}
     </div>
   )
 }
