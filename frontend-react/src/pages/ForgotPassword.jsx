@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 // Add custom CSS for form styling to match blood group dropdown
 const forgotPasswordStyles = `
@@ -70,11 +71,8 @@ function ForgotPassword() {
         return
       }
 
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ email })
       })
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 function Chatbot() {
   const [messages, setMessages] = useState([
@@ -21,10 +22,7 @@ function Chatbot() {
   const checkAiServiceStatus = async () => {
     try {
       // Check if Python service is available through backend
-      const response = await fetch('/api/health/python', {
-        method: 'GET',
-        timeout: 3000
-      })
+      const response = await apiFetch('/api/health/python')
       if (response.ok) {
         setAiServiceStatus('connected')
       } else {
@@ -59,12 +57,9 @@ function Chatbot() {
 
     try {
       // Call backend chatbot API (which forwards to Python service)
-      const response = await fetch('/api/chatbot', {
+      const response = await apiFetch('/api/chatbot', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ question: currentMessage })
+        body: JSON.stringify({ message: currentMessage })
       })
 
       if (response.ok) {

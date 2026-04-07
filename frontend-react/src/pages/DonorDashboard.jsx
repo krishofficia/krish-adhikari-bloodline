@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api'
 import ChangePassword from '../components/ChangePassword'
 import '../components/ChangePasswordButton.css'
 
@@ -47,11 +49,7 @@ function DonorDashboard() {
         }
 
         // Load blood requests for this donor
-        const response = await fetch('/api/blood-requests/donor/requests', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await apiFetch('/api/blood-requests/donor/requests')
         
         if (response.ok) {
           const data = await response.json()
@@ -75,11 +73,7 @@ function DonorDashboard() {
         const user = JSON.parse(localStorage.getItem('user') || '{}')
         console.log('Current user:', user)
         
-        const response = await fetch('/api/blood-requests/donor/requests', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await apiFetch('/api/blood-requests/donor/requests')
         
         console.log('Blood requests response status:', response.status)
         
@@ -107,11 +101,7 @@ function DonorDashboard() {
         const user = JSON.parse(localStorage.getItem('user') || '{}')
         console.log('Loading donation history for user:', user)
         
-        const response = await fetch('/api/donor/donation-history', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await apiFetch('/api/donor/donation-history')
         
         console.log('Donation history response status:', response.status)
         
@@ -137,11 +127,7 @@ function DonorDashboard() {
         const user = JSON.parse(localStorage.getItem('user') || '{}')
         
         // Get current donor's data including donation count and badge
-        const response = await fetch('/api/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await apiFetch('/api/auth/profile')
         
         if (response.ok) {
           const data = await response.json()
@@ -160,7 +146,7 @@ function DonorDashboard() {
     const loadLeaderboard = async () => {
       try {
         console.log('Loading leaderboard...')
-        const response = await fetch('/api/blood-requests/donors/ranking')
+        const response = await apiFetch('/api/blood-requests/donors/ranking')
         
         console.log('Leaderboard response status:', response.status)
         
@@ -208,12 +194,8 @@ function DonorDashboard() {
       
       console.log('Sending request to /api/auth/availability with:', { availability: availabilityValue })
       
-      const response = await fetch('/api/auth/availability', {
+      const response = await apiFetch('/api/auth/availability', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ availability: availabilityValue })
       })
 
@@ -295,12 +277,8 @@ function DonorDashboard() {
       }
       console.log('Request body to send:', requestBody)
       
-      const response = await fetch(`/api/blood-requests/donor/${requestId}/accept`, {
+      const response = await apiFetch(`/api/blood-requests/donor/${requestId}/accept`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(requestBody)
       })
 
@@ -368,12 +346,8 @@ function DonorDashboard() {
       }
       console.log('Request body to send:', requestBody)
       
-      const response = await fetch(`/api/blood-requests/donor/${requestId}/decline`, {
+      const response = await apiFetch(`/api/blood-requests/donor/${requestId}/decline`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(requestBody)
       })
 
@@ -404,11 +378,8 @@ function DonorDashboard() {
     try {
       const token = localStorage.getItem('token')
       
-      const response = await fetch(`/api/donor/donation-history/${donationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/donor/donation-history/${donationId}`, {
+        method: 'DELETE'
       })
 
       if (response.ok) {

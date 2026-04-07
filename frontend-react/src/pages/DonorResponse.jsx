@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 function DonorResponse() {
   const { requestId, action } = useParams()
@@ -26,11 +27,7 @@ function DonorResponse() {
       }
 
       // Get request details
-      const response = await fetch(`/api/blood-requests/donor/${requestId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await apiFetch(`/api/blood-requests/donor/${requestId}`)
 
       if (response.ok) {
         const data = await response.json()
@@ -65,12 +62,8 @@ function DonorResponse() {
         ? `/api/blood-requests/donor/${requestId}/accept`
         : `/api/blood-requests/donor/${requestId}/decline`
 
-      const response = await fetch(endpoint, {
+      const response = await apiFetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(donorInfo)
       })
 
