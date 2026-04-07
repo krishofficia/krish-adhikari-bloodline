@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 // Add custom CSS for form styling to match blood group dropdown
 const registerFormStyles = `
@@ -154,11 +155,8 @@ function Register() {
       }
 
       // Send OTP for registration
-      const response = await fetch('/api/auth/send-otp', {
+      const response = await apiFetch('/api/auth/send-otp', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           email: formData.email,
           role: 'donor',
