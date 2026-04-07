@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 // Add custom CSS for form styling to match blood group dropdown
 const loginFormStyles = `
@@ -161,11 +162,8 @@ function Login() {
         requestBody.email = formData.email
       }
       
-      const response = await fetch(loginEndpoint, {
+      const response = await apiFetch(loginEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(requestBody)
       })
 

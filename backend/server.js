@@ -29,7 +29,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500', 'file://'],
+    origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000', 
+        'http://localhost:5500', 
+        'http://127.0.0.1:5500', 
+        'file://',
+        'https://krish-adhikari-bloodline.vercel.app'
+    ],
     credentials: true
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
