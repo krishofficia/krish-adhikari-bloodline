@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "question": "What is blood donation?",
+    "answer": "Blood donation is a voluntary procedure where a person gives blood that can be used for medical treatments, transfusions, or research."
+  },
+  {
+    "id": 2,
+    "question": "Who can donate blood?",
+    "answer": "Generally, healthy adults aged 18-65 who weigh at least 50kg can donate blood. You must be in good health and meet certain eligibility criteria."
+  },
+  {
+    "id": 3,
+    "question": "How often can I donate blood?",
+    "answer": "You can donate whole blood every 56 days (8 weeks). For platelets, you can donate more frequently, typically every 7 days up to 24 times per year."
+  },
+  {
+    "id": 4,
+    "question": "What should I eat before donating blood?",
+    "answer": "Eat a healthy meal rich in iron and drink plenty of water before donation. Avoid fatty foods and alcohol 24 hours before donation."
+  },
+  {
+    "id": 5,
+    "question": "Is blood donation safe?",
+    "answer": "Yes, blood donation is very safe. All equipment is sterile and used only once. The process is supervised by trained medical professionals."
+  }
+]
