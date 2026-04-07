@@ -1,5 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import BloodDonationQuotes from '../components/BloodDonationQuotes'
+import StatisticsSection from '../components/StatisticsSection'
+import CallToAction from '../components/CallToAction'
+import '../components/EnhancedHomepage.css'
 
 function Home() {
   return (
@@ -24,62 +28,75 @@ function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Enhanced Hero Section */}
       <section className="hero">
         <div className="container">
           <div className="hero-content">
-            <h1 className="hero-title">Connecting Lives Through Blood Donation</h1>
-            <p className="hero-subtitle">Join thousands of donors and organizations working together to save lives. Every donation counts.</p>
+            <h1 className="hero-title">
+              Donate Blood, Save Lives <span className="heart-icon">❤️</span>
+            </h1>
+            <p className="hero-subtitle">
+              Your small act can give someone a second chance at life.
+            </p>
             <div className="hero-buttons">
-              <Link to="/register" className="btn btn-primary">
-                <i className="fas fa-tint"></i>
-                Donate Blood
+              <Link to="/org-register" className="hero-btn primary">
+                <i className="fas fa-search"></i>
+                Find Donors
               </Link>
-              <Link to="/org-register" className="btn btn-primary">
-                <i className="fas fa-hand-holding-heart"></i>
-                Request Blood
+              <Link to="/register" className="hero-btn secondary">
+                <i className="fas fa-user-plus"></i>
+                Become a Donor
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Enhanced Features Section */}
       <section className="features">
         <div className="container">
           <h2 className="section-title">Why Choose Bloodline?</h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">
-                <i className="fas fa-users"></i>
+                <i className="fas fa-search"></i>
               </div>
-              <h3>Large Network</h3>
-              <p>Connect with donors and organizations across the region</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <i className="fas fa-clock"></i>
-              </div>
-              <h3>Quick Response</h3>
-              <p>Fast matching system to find the right donor when you need it</p>
+              <h3>Find Blood Donors Quickly</h3>
+              <p>Our advanced matching system helps you find the right donors in your area within minutes.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-shield-alt"></i>
               </div>
-              <h3>Safe & Secure</h3>
-              <p>Your information is protected and handled with care</p>
+              <h3>Secure & Verified Users</h3>
+              <p>All donors and organizations are verified to ensure safety and trust in our community.</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">
-                <i className="fas fa-heart"></i>
+                <i className="fas fa-exclamation-triangle"></i>
               </div>
-              <h3>Save Lives</h3>
-              <p>Every donation can save up to three lives</p>
+              <h3>Emergency Requests</h3>
+              <p>Urgent blood requests get priority matching and instant notifications to nearby donors.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">
+                <i className="fas fa-user-check"></i>
+              </div>
+              <h3>Easy Registration</h3>
+              <p>Simple and quick registration process for both donors and organizations.</p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Blood Donation Quotes Section */}
+      <BloodDonationQuotes />
+
+      {/* Statistics Section */}
+      <StatisticsSection />
+
+      {/* Call to Action Section */}
+      <CallToAction />
 
       {/* Chatbot Section */}
       <section className="features" style={{background: 'linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)', padding: '4rem 0'}}>
@@ -89,7 +106,7 @@ function Home() {
             <p style={{fontSize: '1.1rem', color: 'var(--text-light)', marginBottom: '2rem'}}>
               Have questions about blood donation? Our AI-powered chatbot is trained on verified blood donation knowledge and can help you with eligibility, safety, diet, and more!
             </p>
-            <Link to="/chatbot" className="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2.5rem'}}>
+            <Link to="/chatbot" className="hero-btn primary" style={{fontSize: '1.1rem', padding: '1rem 2.5rem'}}>
               <i className="fas fa-robot"></i>
               Chat with AI Assistant
             </Link>

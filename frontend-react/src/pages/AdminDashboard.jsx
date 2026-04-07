@@ -1,72 +1,527 @@
 import React, { useState, useEffect } from 'react'
 import '../admin-styles.css'
 
-// Add custom CSS for form styling to match blood group dropdown
-const editDonorFormStyles = `
-  .modal-content .form-group input,
-  .modal-content .form-group select {
-    padding: 0.875rem;
-    border: 2px solid #d32f2f !important;
-    border-radius: 8px;
+// Add custom CSS for enhanced admin styling
+const enhancedAdminStyles = `
+  /* ============================================
+     ENHANCED ADMIN DASHBOARD STYLES
+     Modern, Clean, Consistent with Home Page
+     ============================================ */
+  
+  /* Enhanced Admin Header */
+  .admin-header {
+    background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 50%, #8b0000 100%);
+    color: white;
+    padding: 4rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+  
+  .admin-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="admin-pattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="25" cy="15" r="0.8" fill="rgba(255,255,255,0.03)"/><circle cx="15" cy="25" r="1.2" fill="rgba(255,255,255,0.04)"/></pattern></defs><rect width="100" height="100" fill="url(%23admin-pattern)"/></svg>');
+    opacity: 0.1;
+    animation: floatPattern 25s ease-in-out infinite;
+  }
+  
+  .admin-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0 0 1rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    animation: titleGlow 3s ease-in-out infinite alternate;
+  }
+  
+  .admin-header p {
+    margin: 0;
+    opacity: 0.95;
+    font-size: 1.2rem;
+    font-weight: 300;
+  }
+  
+  .admin-header .btn-logout {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+  
+  .admin-header .btn-logout:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+  
+  /* Enhanced Statistics Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  
+  .stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+  }
+  
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d32f2f, #ef5350);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  
+  .stat-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  }
+  
+  .stat-card i {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #d32f2f, #ef5350);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-card:hover i {
+    transform: scale(1.1) rotate(5deg);
+  }
+  
+  .stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #d32f2f;
+    margin: 0;
+    line-height: 1;
+  }
+  
+  .stat-card p {
     font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    font-family: inherit;
-    background: #ffffff;
-    color: #212121 !important;
+    color: #616161;
+    margin: 0.5rem 0 0 0;
+    font-weight: 500;
+  }
+  
+  /* Enhanced Tabs */
+  .tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  }
+  
+  .tab {
+    padding: 1rem 2rem;
+    background: #f8f9fa;
+    border: none;
+    border-radius: 12px 12px 0 0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
     width: 100%;
-    box-sizing: border-box;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(211,47,47,0.1), transparent);
+    transition: left 0.5s ease;
   }
   
-  .modal-content .form-group input:focus,
-  .modal-content .form-group select:focus {
+  .tab:hover::before {
+    left: 100%;
+  }
+  
+  .tab:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+  }
+  
+  .tab.active {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: white;
+    border-color: #d32f2f;
+    box-shadow: 0 5px 15px rgba(211,47,47,0.2);
+  }
+  
+  /* Enhanced Table Containers */
+  .table-container {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+    border: 1px solid #f0f0f0;
+  }
+  
+  .table-header {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .table-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .search-box {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .search-box input {
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 25px;
+    width: 250px;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .search-box input:focus {
     outline: none;
-    border-color: #d32f2f !important;
-    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 0 10px rgba(255,255,255,0.1);
   }
   
-  .modal-content .form-group input::placeholder {
-    color: #999;
+  .search-box input::placeholder {
+    color: rgba(255,255,255,0.7);
   }
   
-  .modal-content .form-group input[type="text"],
-  .modal-content .form-group input[type="email"],
-  .modal-content .form-group input[type="tel"] {
-    border: 2px solid #d32f2f !important;
-    background: #ffffff !important;
-    color: #212121 !important;
+  /* Enhanced Table Content */
+  .table-content {
+    overflow-x: auto;
   }
   
-  .modal-content .form-group input[type="text"]:focus,
-  .modal-content .form-group input[type="email"]:focus,
-  .modal-content .form-group input[type="tel"]:focus {
-    border-color: #d32f2f !important;
-    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  .table-content table {
+    width: 100%;
+    border-collapse: collapse;
   }
   
-  .modal-content .form-group select {
-    border: 2px solid #d32f2f !important;
-    background: #ffffff !important;
-    color: #212121 !important;
+  .table-content th, 
+  .table-content td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
   }
   
-  .modal-content .form-group select:focus {
-    border-color: #d32f2f !important;
-    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+  .table-content th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
   
-  .modal-content .form-group select option {
-    background: #ffffff;
-    color: #212121;
+  .table-content tr:hover {
+    background: #f8f9fa;
+  }
+  
+  .table-content tr:hover td {
+    color: #d32f2f;
+  }
+  
+  /* Enhanced Action Buttons */
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.3s ease;
+  }
+  
+  .btn:hover::before {
+    left: 100%;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .btn-approve {
+    background: #28a745;
+    color: white;
+  }
+  
+  .btn-approve:hover {
+    background: #218838;
+  }
+  
+  .btn-reject {
+    background: #dc3545;
+    color: white;
+  }
+  
+  .btn-reject:hover {
+    background: #c82333;
+  }
+  
+  .btn-edit {
+    background: #007bff;
+    color: white;
+  }
+  
+  .btn-edit:hover {
+    background: #0056b3;
+  }
+  
+  .btn-delete {
+    background: #6c757d;
+    color: white;
+  }
+  
+  .btn-delete:hover {
+    background: #545b62;
+  }
+  
+  /* Enhanced Status Badges */
+  .status-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .blood-badge {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: white;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+  }
+  
+  /* Enhanced Modal */
+  .modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    max-width: 600px;
+    width: 90%;
+    animation: slideIn 0.3s ease;
+    position: relative;
+    border: 1px solid #f0f0f0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .admin-header {
+      padding: 2rem 1rem;
+    }
+    
+    .admin-header h1 {
+      font-size: 2rem;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .tabs {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .tab {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .search-box input {
+      width: 200px;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .admin-header h1 {
+      font-size: 1.75rem;
+    }
+    
+    .tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+  }
+  
+  /* Loading and Error States */
+  .loading-state, .error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    margin: 2rem auto;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+  
+  .loading-state i, .error-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .loading-state i {
+    color: #d32f2f;
+    animation: spin 1s linear infinite;
+  }
+  
+  .error-state i {
+    color: #dc3545;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes floatPattern {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  
+  @keyframes titleGlow {
+    from { text-shadow: 2px 2px 4px rgba(211,47,47,0.3); }
+    to { text-shadow: 2px 2px 8px rgba(211,47,47,0.5), 0 0 20px rgba(255,255,255,0.2); }
   }
 `;
 
 function AdminDashboard() {
   console.log('AdminDashboard component rendering...')
   
-  // Inject custom CSS styles
+  // Inject enhanced CSS styles
   useEffect(() => {
     const styleElement = document.createElement('style')
-    styleElement.textContent = editDonorFormStyles
+    styleElement.textContent = enhancedAdminStyles
     document.head.appendChild(styleElement)
     
     return () => {
@@ -428,8 +883,8 @@ function AdminDashboard() {
   if (loading) {
     console.log('AdminDashboard showing loading state...')
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <i className="fas fa-spinner fa-spin" style={{ fontSize: '2rem', color: 'var(--primary-color)' }}></i>
+      <div className="loading-state">
+        <i className="fas fa-spinner fa-spin"></i>
         <p>Loading admin dashboard...</p>
       </div>
     )
@@ -438,8 +893,8 @@ function AdminDashboard() {
   if (error) {
     console.log('AdminDashboard showing error state...')
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <i className="fas fa-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--error-color)' }}></i>
+      <div className="error-state">
+        <i className="fas fa-exclamation-triangle"></i>
         <p>Error loading admin dashboard: {error}</p>
       </div>
     )
@@ -449,7 +904,7 @@ function AdminDashboard() {
 
   return (
     <div>
-      {/* Navigation Bar */}
+      {/* Navigation Bar - Consistent with Home Page */}
       <nav className="navbar">
         <div className="container">
           <div className="nav-brand">
@@ -468,17 +923,18 @@ function AdminDashboard() {
         </div>
       </nav>
 
-      {/* Admin Dashboard Content */}
+      {/* Enhanced Admin Dashboard Content */}
       <div className="admin-dashboard">
+        {/* Enhanced Admin Header */}
         <div className="admin-header">
           <h1><i className="fas fa-shield-alt"></i> Admin Dashboard</h1>
           <p>Manage Organizations and Donors</p>
-          <button className="btn btn-logout" onClick={handleLogout}>
+          <button className="btn-logout" onClick={handleLogout}>
             <i className="fas fa-sign-out-alt"></i> Logout
           </button>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Enhanced Statistics Cards */}
         <div className="stats-grid">
           <div className="stat-card">
             <i className="fas fa-building"></i>
@@ -502,7 +958,7 @@ function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Enhanced Tabs */}
         <div className="tabs">
           <button 
             className={`tab ${activeTab === 'pending' ? 'active' : ''}`} 
@@ -631,7 +1087,7 @@ function AdminDashboard() {
                         <td>{org.licenseNumber}</td>
                         <td>{org.panNumber}</td>
                         <td>
-                          <span className={`status-badge status-${org.verificationStatus}`}>
+                          <span className="status-badge status-{org.verificationStatus}">
                             {org.verificationStatus}
                           </span>
                         </td>
@@ -694,7 +1150,7 @@ function AdminDashboard() {
                         </td>
                         <td>{donor.location}</td>
                         <td>
-                          <span className={`status-badge ${donor.availability === 'available' ? 'status-available' : 'status-not-available'}`}>
+                          <span className="status-badge status-{donor.availability === 'available' ? 'status-available' : 'status-not-available'}">
                             {donor.availability === 'available' ? 'Available' : 'Not Available'}
                           </span>
                         </td>
@@ -725,9 +1181,9 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* Reject Modal */}
+      {/* Enhanced Reject Modal */}
       {showRejectModal && (
-        <div className="modal" style={{ display: 'block' }}>
+        <div className="modal">
           <div className="modal-content">
             <h3><i className="fas fa-times-circle"></i> Reject Organization</h3>
             <form onSubmit={(e) => {
@@ -761,9 +1217,9 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Edit Donor Modal */}
+      {/* Enhanced Edit Donor Modal */}
       {showEditDonorModal && selectedItem && (
-        <div className="modal" style={{ display: 'block' }}>
+        <div className="modal">
           <div className="modal-content">
             <h3><i className="fas fa-user-edit"></i> Edit Donor</h3>
             <form onSubmit={(e) => {
@@ -857,9 +1313,9 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Edit Organization Modal */}
+      {/* Enhanced Edit Organization Modal */}
       {showEditOrgModal && selectedItem && (
-        <div className="modal" style={{ display: 'block' }}>
+        <div className="modal">
           <div className="modal-content">
             <h3><i className="fas fa-building"></i> Edit Organization</h3>
             <form onSubmit={(e) => {

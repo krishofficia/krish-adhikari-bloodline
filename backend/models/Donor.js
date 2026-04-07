@@ -42,6 +42,16 @@ const DonorSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // Track if welcome email has been sent
+    welcomeEmailSent: {
+        type: Boolean,
+        default: false
+    },
+    // Track if this is the first login after verification
+    isFirstLogin: {
+        type: Boolean,
+        default: false
+    },
     // Badge and Ranking System
     donationCount: {
         type: Number,

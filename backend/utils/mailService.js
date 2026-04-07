@@ -501,9 +501,224 @@ const sendPasswordResetEmail = async (options) => {
     }
 };
 
+/**
+ * Send welcome email to donor on first login
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.donorName - Donor's full name
+ * @param {string} options.bloodGroup - Donor's blood group
+ * @returns {Promise} - Email sending result
+ */
+const sendWelcomeEmail = async (options) => {
+    try {
+        const { to, donorName, bloodGroup } = options;
+        
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Welcome to Bloodline</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f4f4f4;
+                    }
+                    .container {
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .logo {
+                        font-size: 28px;
+                        font-weight: bold;
+                        color: #d32f2f;
+                        margin-bottom: 10px;
+                    }
+                    .title {
+                        color: #333;
+                        font-size: 24px;
+                        margin: 0;
+                    }
+                    .content {
+                        margin-bottom: 30px;
+                    }
+                    .welcome-message {
+                        background: linear-gradient(135deg, #d32f2f, #b71c1c);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        margin: 20px 0;
+                    }
+                    .blood-badge {
+                        display: inline-block;
+                        background: #d32f2f;
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-weight: bold;
+                        margin: 10px 0;
+                    }
+                    .feature-list {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin: 20px 0;
+                    }
+                    .feature-list h3 {
+                        color: #d32f2f;
+                        margin-top: 0;
+                    }
+                    .feature-list ul {
+                        margin: 0;
+                        padding-left: 20px;
+                    }
+                    .feature-list li {
+                        margin-bottom: 10px;
+                    }
+                    .cta-section {
+                        text-align: center;
+                        margin: 30px 0;
+                    }
+                    .cta-button {
+                        display: inline-block;
+                        background: linear-gradient(135deg, #d32f2f, #b71c1c);
+                        color: white;
+                        padding: 12px 30px;
+                        text-decoration: none;
+                        border-radius: 25px;
+                        font-weight: bold;
+                        transition: all 0.3s ease;
+                    }
+                    .cta-button:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 5px 15px rgba(211, 47, 47, 0.3);
+                    }
+                    .stats {
+                        display: flex;
+                        justify-content: space-around;
+                        margin: 30px 0;
+                        text-align: center;
+                    }
+                    .stat-item {
+                        flex: 1;
+                    }
+                    .stat-number {
+                        font-size: 24px;
+                        font-weight: bold;
+                        color: #d32f2f;
+                    }
+                    .stat-label {
+                        font-size: 14px;
+                        color: #666;
+                    }
+                    .footer {
+                        text-align: center;
+                        padding-top: 20px;
+                        border-top: 1px solid #eee;
+                        color: #666;
+                        font-size: 14px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🩸 Bloodline</div>
+                        <h1 class="title">Welcome to the Bloodline Family!</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="welcome-message">
+                            <h2>🎉 Thank you for joining us, ${donorName}!</h2>
+                            <p>Your account is now verified and you're ready to start saving lives.</p>
+                        </div>
+                        
+                        <div class="blood-badge">
+                            Your Blood Group: ${bloodGroup}
+                        </div>
+                        
+                        <div class="feature-list">
+                            <h3>🌟 What You Can Do Now:</h3>
+                            <ul>
+                                <li><strong>Update Your Profile:</strong> Keep your information current</li>
+                                <li><strong>Set Availability:</strong> Let others know when you're available to donate</li>
+                                <li><strong>Respond to Requests:</strong> Help patients in need of blood</li>
+                                <li><strong>Earn Badges:</strong> Get recognized for your contributions</li>
+                                <li><strong>Track Impact:</strong> See how many lives you've helped save</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-number">4.5M+</div>
+                                <div class="stat-label">Lives Saved Annually</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">24/7</div>
+                                <div class="stat-label">Emergency Support</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">1000+</div>
+                                <div class="stat-label">Active Donors</div>
+                            </div>
+                        </div>
+                        
+                        <div class="cta-section">
+                            <p>Ready to make a difference? Log in to your dashboard to get started!</p>
+                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="cta-button">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>💡 Pro Tip:</strong> Keep your availability status updated to receive relevant blood donation requests in your area.</p>
+                        </div>
+                        
+                        <p>If you have any questions or need assistance, our support team is here to help you.</p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>© 2026 Bloodline. All rights reserved.</p>
+                        <p>Together, we can save lives. 🩸</p>
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            `;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'your-email@gmail.com',
+            to: to,
+            subject: '🎉 Welcome to Bloodline - Start Your Life-Saving Journey!',
+            html: htmlContent
+        };
+
+        await transporter.sendMail(mailOptions);
+        return { success: true };
+    } catch (error) {
+        console.error('Error sending welcome email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     sendOTP,
     sendNotification,
     generateBloodRequestEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendWelcomeEmail
 };

@@ -211,6 +211,26 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
             return res.status(403).json({ message: 'Access denied' });
         }
         
+        // Check if quantity, required date, location, or hospital name has changed
+        const quantityChanged = bloodRequest.quantity !== quantity;
+        const dateChanged = bloodRequest.requiredDate.toISOString() !== new Date(requiredDate).toISOString();
+        const locationChanged = bloodRequest.location !== location;
+        const hospitalChanged = bloodRequest.hospitalName !== hospitalName;
+        
+        // Store old values for email notification
+        const oldQuantity = bloodRequest.quantity;
+        const oldDate = bloodRequest.requiredDate;
+        const oldLocation = bloodRequest.location;
+        const oldHospitalName = bloodRequest.hospitalName;
+        
+        console.log('🔍 Blood Request Update Debug:');
+        console.log('- Request ID:', id);
+        console.log('- Quantity Changed:', quantityChanged, `(old: ${oldQuantity}, new: ${quantity})`);
+        console.log('- Date Changed:', dateChanged, `(old: ${oldDate}, new: ${new Date(requiredDate)})`);
+        console.log('- Location Changed:', locationChanged, `(old: ${oldLocation}, new: ${location})`);
+        console.log('- Hospital Changed:', hospitalChanged, `(old: ${oldHospitalName}, new: ${hospitalName})`);
+        console.log('- Donor Responses:', bloodRequest.donorResponses ? bloodRequest.donorResponses.length : 0);
+        
         // Update the blood request
         bloodRequest.bloodGroup = bloodGroup;
         bloodRequest.quantity = quantity;
@@ -220,6 +240,588 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
         bloodRequest.requiredDate = new Date(requiredDate);
         
         await bloodRequest.save();
+        
+        // Send email notifications if quantity, date, location, or hospital changed
+        if (quantityChanged || dateChanged || locationChanged || hospitalChanged) {
+            console.log('🔍 Email notification condition triggered - quantity, date, location, or hospital changed');
+            try {
+                // Get organization details
+                const Organization = require('../models/Organization');
+                const organization = await Organization.findById(bloodRequest.organizationId);
+                
+                // Find donors who have responded to this request
+                const donorsToNotify = [];
+                
+                // Check donor responses
+                if (bloodRequest.donorResponses && bloodRequest.donorResponses.length > 0) {
+                    console.log('🔍 Checking donor responses...');
+                    const Donor = require('../models/Donor');
+                    
+                    for (const response of bloodRequest.donorResponses) {
+                        console.log(`🔍 Donor Response - Status: ${response.status}, Donor ID: ${response.donorId}`);
+                        if (response.status === 'Accepted') {
+                            const donor = await Donor.findById(response.donorId);
+                            console.log(`🔍 Found donor:`, donor ? { name: donor.fullName, email: donor.email } : 'Not found');
+                            if (donor && donor.email) {
+                                donorsToNotify.push(donor);
+                                console.log(`✅ Added donor to notification list: ${donor.fullName} (${donor.email})`);
+                            } else {
+                                console.log(`❌ Donor not found or no email for ID: ${response.donorId}`);
+                            }
+                        } else {
+                            console.log(`🔍 Skipping donor - status not 'Accepted': ${response.status}`);
+                        }
+                    }
+                } else {
+                    console.log('🔍 No donor responses found on this request');
+                }
+                
+                console.log(`🔍 Total donors to notify: ${donorsToNotify.length}`);
+                
+                // Send notifications to all accepted donors
+                const { sendNotification } = require('../utils/mailService');
+                
+                for (const donor of donorsToNotify) {
+                    let emailSubject = 'Blood Request Updated - Bloodline';
+                    let emailContent = '';
+                    
+                    // Handle multiple change combinations
+                    if (quantityChanged && dateChanged && locationChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Quantity, Date, Location & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && dateChanged && locationChanged) {
+                        emailSubject = 'Blood Request Quantity, Date & Location Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && dateChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Quantity, Date & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && locationChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Quantity, Location & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (dateChanged && locationChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Date, Location & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && dateChanged) {
+                        emailSubject = 'Blood Request Quantity & Date Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && locationChanged) {
+                        emailSubject = 'Blood Request Quantity & Location Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (dateChanged && locationChanged) {
+                        emailSubject = 'Blood Request Date & Location Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged) {
+                        emailSubject = 'Blood Request Quantity Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Quantity Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Quantity:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (dateChanged) {
+                        emailSubject = 'Blood Request Date Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Date Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Required Date:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (locationChanged) {
+                        emailSubject = 'Blood Request Location Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Location Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Location:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Hospital:</strong> ${hospitalName}</p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (quantityChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Quantity & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> <span style="text-decoration: line-through; color: #999;">${oldQuantity} units</span> → <strong style="color: #d32f2f;">${quantity} units</strong></p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (dateChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Date & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> <span style="text-decoration: line-through; color: #999;">${oldDate.toLocaleDateString()}</span> → <strong style="color: #d32f2f;">${new Date(requiredDate).toLocaleDateString()}</strong></p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (locationChanged && hospitalChanged) {
+                        emailSubject = 'Blood Request Location & Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Details:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Location:</strong> <span style="text-decoration: line-through; color: #999;">${oldLocation}</span> → <strong style="color: #d32f2f;">${location}</strong></p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (hospitalChanged) {
+                        emailSubject = 'Blood Request Hospital Updated - Bloodline';
+                        emailContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <div style="background: #d32f2f; color: white; padding: 20px; text-align: center;">
+                                    <h2 style="margin: 0;">🩸 Blood Request Hospital Updated</h2>
+                                </div>
+                                <div style="padding: 30px; background: #f9f9f9;">
+                                    <h3>Hello ${donor.fullName},</h3>
+                                    <p>A blood request you accepted has been updated by <strong>${organization.name}</strong>.</p>
+                                    
+                                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+                                        <h4 style="color: #d32f2f; margin-top: 0;">Updated Hospital:</h4>
+                                        <p><strong>Blood Group:</strong> ${bloodGroup}</p>
+                                        <p><strong>Quantity:</strong> ${quantity} units</p>
+                                        <p><strong>Required Date:</strong> ${new Date(requiredDate).toLocaleDateString()}</p>
+                                        <p><strong>Location:</strong> ${location}</p>
+                                        <p><strong>Hospital:</strong> <span style="text-decoration: line-through; color: #999;">${oldHospitalName}</span> → <strong style="color: #d32f2f;">${hospitalName}</strong></p>
+                                        <p><strong>Urgency:</strong> ${urgencyLevel}</p>
+                                    </div>
+                                    
+                                    <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                            View Request Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background: #333; color: white; padding: 20px; text-align: center;">
+                                    <p style="margin: 0;">© 2024 Bloodline. Connecting Lives Through Blood Donation</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    const emailResult = await sendNotification({
+                        to: donor.email,
+                        subject: emailSubject,
+                        html: emailContent
+                    });
+                    
+                    console.log(`🔍 Email sending result for ${donor.email}:`, emailResult);
+                    
+                    if (emailResult.success) {
+                        console.log(`✅ Update notification sent to donor: ${donor.email}`);
+                    } else {
+                        console.error(`❌ Failed to send update notification to donor: ${donor.email}`, emailResult.error);
+                    }
+                }
+                
+                console.log(`📧 Sent ${donorsToNotify.length} update notifications for blood request ${id}`);
+                
+            } catch (emailError) {
+                console.error('Error sending update notifications:', emailError);
+                // Continue with the response even if email fails
+            }
+        } else {
+            console.log('🔍 Email notification condition NOT triggered - no quantity, date, location, or hospital changes detected');
+        }
         
         res.json({
             message: 'Blood request updated successfully',

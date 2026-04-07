@@ -6,7 +6,7 @@ const BloodRequest = require('../models/BloodRequest');
 const PasswordReset = require('../models/PasswordReset');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendOTP, sendPasswordResetEmail } = require('../utils/mailService');
+const { sendOTP, sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/mailService');
 const { generateOTP, storeOTP, verifyOTP, hasPendingOTP } = require('../utils/otpStore');
 const { generateResetToken, hashToken, verifyToken } = require('../utils/tokenGenerator');
 
@@ -316,6 +316,47 @@ router.post('/login-donor', async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
         
+        // Check if donor is verified
+        if (!donor.isVerified) {
+            return res.status(403).json({ 
+                message: 'Please verify your email before logging in.',
+                isVerified: false
+            });
+        }
+        
+        // Check if this is the first login after verification
+        const isFirstLogin = !donor.welcomeEmailSent;
+        let welcomeEmailSent = false;
+        
+        if (isFirstLogin) {
+            console.log('First login detected for donor:', donor.email);
+            
+            try {
+                // Send welcome email
+                const welcomeResult = await sendWelcomeEmail({
+                    to: donor.email,
+                    donorName: donor.fullName,
+                    bloodGroup: donor.bloodGroup
+                });
+                
+                if (welcomeResult.success) {
+                    console.log('Welcome email sent successfully to:', donor.email);
+                    welcomeEmailSent = true;
+                    
+                    // Update donor record to mark welcome email as sent
+                    await Donor.findByIdAndUpdate(donor._id, {
+                        welcomeEmailSent: true,
+                        isFirstLogin: false
+                    });
+                } else {
+                    console.error('Failed to send welcome email:', welcomeResult.error);
+                }
+            } catch (emailError) {
+                console.error('Error sending welcome email:', emailError);
+                // Don't fail the login if email fails
+            }
+        }
+        
         // Generate JWT token
         const token = jwt.sign(
             { donorId: donor._id },
@@ -323,7 +364,7 @@ router.post('/login-donor', async (req, res) => {
             { expiresIn: '7d' }
         );
         
-        res.json({
+        const responseData = {
             message: 'Login successful',
             token,
             donor: {
@@ -336,7 +377,15 @@ router.post('/login-donor', async (req, res) => {
                 availability: donor.availability,
                 isVerified: donor.isVerified
             }
-        });
+        };
+        
+        // Add welcome email info to response if it was sent
+        if (welcomeEmailSent) {
+            responseData.welcomeEmailSent = true;
+            responseData.message = 'Login successful! Welcome to Bloodline! 🎉';
+        }
+        
+        res.json(responseData);
     } catch (error) {
         console.error('Donor login error:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -647,7 +696,10 @@ router.post('/verify-otp', async (req, res) => {
                 bloodGroup: userData.bloodGroup,
                 location: userData.location,
                 availability: userData.availability,
-                password: hashedPassword
+                password: hashedPassword,
+                isVerified: true, // User is verified after OTP verification
+                welcomeEmailSent: false, // Ready for welcome email on first login
+                isFirstLogin: true
             });
         } else {
             newUser = new Organization({
@@ -658,7 +710,9 @@ router.post('/verify-otp', async (req, res) => {
                 licenseNumber: userData.licenseNumber,
                 panNumber: userData.panNumber,
                 panCardImage: userData.panCardImage,
-                password: hashedPassword
+                password: hashedPassword,
+                isVerified: true, // User is verified after OTP verification
+                verificationStatus: 'pending' // Still needs admin verification for organizations
             });
         }
         
