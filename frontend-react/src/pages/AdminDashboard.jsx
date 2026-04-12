@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import '../admin-styles.css'
+import { apiFetch } from '../api'
 
 // Add custom CSS for enhanced admin styling
 const enhancedAdminStyles = `
@@ -562,11 +563,7 @@ function AdminDashboard() {
       const token = localStorage.getItem('token')
       
       // Load organizations
-      const orgsResponse = await fetch('/api/admin/organizations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const orgsResponse = await apiFetch('/api/admin/organizations')
       
       if (orgsResponse.ok) {
         const orgsData = await orgsResponse.json()
@@ -586,11 +583,7 @@ function AdminDashboard() {
       }
 
       // Load pending organizations
-      const pendingResponse = await fetch('/api/admin/organizations/pending', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const pendingResponse = await apiFetch('/api/admin/organizations/pending')
       
       if (pendingResponse.ok) {
         const pendingData = await pendingResponse.json()
@@ -598,11 +591,7 @@ function AdminDashboard() {
       }
 
       // Load donors
-      const donorsResponse = await fetch('/api/admin/donors', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const donorsResponse = await apiFetch('/api/admin/donors')
       
       if (donorsResponse.ok) {
         const donorsData = await donorsResponse.json()
@@ -625,11 +614,8 @@ function AdminDashboard() {
   const handleApprove = async (orgId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/admin/organizations/${orgId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/admin/organizations/${orgId}/approve`, {
+        method: 'POST'
       })
       
       if (response.ok) {
@@ -654,11 +640,8 @@ function AdminDashboard() {
   const handleApproveOrg = async (orgId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/admin/organizations/${orgId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/admin/organizations/${orgId}/approve`, {
+        method: 'POST'
       })
 
       if (response.ok) {
@@ -688,12 +671,8 @@ function AdminDashboard() {
     console.log('Reject submit called with reason:', reason)
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/admin/organizations/${selectedItem._id}/reject`, {
+      const response = await apiFetch(`/api/admin/organizations/${selectedItem._id}/reject`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ rejectionReason: reason })
       })
 
@@ -727,12 +706,8 @@ function AdminDashboard() {
       const token = localStorage.getItem('token')
       console.log('Updating donor:', selectedItem._id, donorData)
       
-      const response = await fetch(`/api/admin/donors/${selectedItem._id}`, {
+      const response = await apiFetch(`/api/admin/donors/${selectedItem._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(donorData)
       })
 
@@ -766,11 +741,8 @@ function AdminDashboard() {
     try {
       const token = localStorage.getItem('token')
       console.log('Making delete request to:', `/api/admin/organizations/${orgId}`)
-      const response = await fetch(`/api/admin/organizations/${orgId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/admin/organizations/${orgId}`, {
+        method: 'DELETE'
       })
 
       console.log('Delete response status:', response.status)
@@ -798,11 +770,8 @@ function AdminDashboard() {
     try {
       const token = localStorage.getItem('token')
       console.log('Making delete request to:', `/api/admin/donors/${donorId}`)
-      const response = await fetch(`/api/admin/donors/${donorId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/admin/donors/${donorId}`, {
+        method: 'DELETE'
       })
 
       console.log('Delete response status:', response.status)
@@ -834,12 +803,8 @@ function AdminDashboard() {
       const token = localStorage.getItem('token')
       console.log('Updating organization:', selectedItem._id, formData)
       
-      const response = await fetch(`/api/admin/organizations/${selectedItem._id}`, {
+      const response = await apiFetch(`/api/admin/organizations/${selectedItem._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       })
 
