@@ -607,7 +607,7 @@ function OrgDashboard() {
       const token = localStorage.getItem('token')
       
       // Find the donor response to get donor details
-      const selectedDonor = selectedRequest?.responses?.find(r => r.donorId === donorId)
+      const selectedDonor = selectedRequest?.donorResponses?.find(r => r.donorId === donorId)
       
       if (!selectedDonor) {
         showNotification('Donor information not found', 'error')
