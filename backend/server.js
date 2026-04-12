@@ -25,18 +25,24 @@ const connectDB = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error('❌ JWT_SECRET environment variable is required');
+    process.exit(1);
+}
 
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:3000', 
-        'http://127.0.0.1:3000', 
-        'http://localhost:5500', 
-        'http://127.0.0.1:5500', 
-        'file://',
-        'https://krish-adhikari-bloodline.vercel.app'
-    ],
+    origin: process.env.CORS_ORIGIN ? 
+        (process.env.CORS_ORIGIN.includes(',') ? process.env.CORS_ORIGIN.split(',') : [process.env.CORS_ORIGIN]) :
+        [
+            'http://localhost:3000', 
+            'http://127.0.0.1:3000', 
+            'http://localhost:5500', 
+            'http://127.0.0.1:5500', 
+            'file://',
+            'https://krish-adhikari-bloodline.vercel.app'
+        ],
     credentials: true
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -349,12 +355,15 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 connectDB().then(() => {
     // Start server
     app.listen(PORT, () => {
-        console.log(`🚀 Bloodline server running on http://localhost:${PORT}`);
+        console.log(`🚀 Bloodline server running on port ${PORT}`);
         console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
         console.log(`🩸 MongoDB connected successfully`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'default origins'}`);
     });
 }).catch(error => {
-    console.error('Failed to connect to MongoDB:', error);
+    console.error('❌ Failed to connect to MongoDB:', error.message);
+    console.error('💡 Please check your MONGODB_URI environment variable');
     process.exit(1);
 });
 

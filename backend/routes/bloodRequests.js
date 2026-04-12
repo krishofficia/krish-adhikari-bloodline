@@ -16,7 +16,7 @@ const authenticateToken = (req, res, next) => {
         return res.status(401).json({ message: 'Access token required' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production', (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: 'Invalid or expired token' });
         }
@@ -310,7 +310,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -344,7 +344,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -378,7 +378,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -412,7 +412,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -446,7 +446,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -480,7 +480,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -514,7 +514,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -548,7 +548,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -582,7 +582,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -616,7 +616,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -650,7 +650,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -684,7 +684,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -718,7 +718,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -752,7 +752,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of these changes and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -786,7 +786,7 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                                     <p style="color: #666;">Please take note of this change and plan your donation accordingly.</p>
                                     
                                     <div style="text-align: center; margin: 30px 0;">
-                                        <a href="http://localhost:5173/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                                        <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background: #d32f2f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                                             View Request Details
                                         </a>
                                     </div>
@@ -874,7 +874,7 @@ router.get('/donor/requests', async (req, res) => {
         }
 
         // Decode token to get donor ID
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Get donor details
         const donor = await Donor.findById(decoded.donorId);

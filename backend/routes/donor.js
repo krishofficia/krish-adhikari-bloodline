@@ -16,7 +16,7 @@ const authenticateDonor = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('Token decoded successfully:', decoded);
         
         // Check if this is a donor token (has donorId field)

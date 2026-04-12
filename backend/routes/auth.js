@@ -91,7 +91,7 @@ router.post('/register', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { organizationId: organization._id },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
         
@@ -163,7 +163,7 @@ router.post('/login', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { organizationId: organization._id },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
         
@@ -195,7 +195,7 @@ router.get('/profile', async (req, res) => {
             return res.status(401).json({ message: 'No token provided' });
         }
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const donorId = decoded.donorId;
         
         const donor = await Donor.findById(donorId);
@@ -274,7 +274,7 @@ router.post('/register-donor', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { donorId: donor._id },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
         
@@ -360,7 +360,7 @@ router.post('/login-donor', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { donorId: donor._id },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
         
@@ -406,7 +406,7 @@ router.put('/availability', async (req, res) => {
             return res.status(401).json({ message: 'No token provided' });
         }
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('Decoded token:', decoded);
         
         const donorId = decoded.donorId;
@@ -448,7 +448,7 @@ router.get('/donor/notifications', async (req, res) => {
             return res.status(401).json({ message: 'No token provided' });
         }
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const donorId = decoded.donorId;
         
         // Find blood requests that match donor's blood group
@@ -513,7 +513,7 @@ router.post('/change-password', async (req, res) => {
             return res.status(401).json({ message: 'No token provided' });
         }
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { currentPassword, newPassword } = req.body;
         
         if (!currentPassword || !newPassword) {

@@ -6,14 +6,37 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// Validate email configuration
+const emailUser = process.env.EMAIL_USER;
+const emailPass = process.env.EMAIL_PASS;
+
+if (!emailUser || !emailPass) {
+    console.error('❌ EMAIL_USER and EMAIL_PASS environment variables are required');
+    console.error('💡 Please configure email credentials in your environment variables');
+}
+
 // Email configuration
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASS || 'your-app-password'
+        user: emailUser,
+        pass: emailPass
     }
 });
+
+// Test email configuration on startup
+const testEmailConfig = async () => {
+    try {
+        await transporter.verify();
+        console.log('✅ Email service configured successfully');
+    } catch (error) {
+        console.error('❌ Email service configuration failed:', error.message);
+        console.error('💡 Please check your EMAIL_USER and EMAIL_PASS environment variables');
+    }
+};
+
+// Test configuration on module load
+testEmailConfig();
 
 /**
  * Send OTP email for registration verification
@@ -134,7 +157,7 @@ const sendOTP = async (options) => {
         `;
 
         const mailOptions = {
-            from: `"Bloodline" <${process.env.EMAIL_USER || 'your-email@gmail.com'}>`,
+            from: `"Bloodline" <${emailUser}>`,
             to: options.to,
             subject: `Bloodline - Verify Your ${roleText} Registration`,
             html: htmlContent
@@ -161,7 +184,7 @@ const sendOTP = async (options) => {
 const sendNotification = async (options) => {
     try {
         const mailOptions = {
-            from: `"Bloodline" <${process.env.EMAIL_USER || 'your-email@gmail.com'}>`,
+            from: `"Bloodline" <${emailUser}>`,
             to: options.to,
             subject: options.subject,
             html: options.html
@@ -376,7 +399,7 @@ const sendPasswordResetEmail = async (options) => {
         const { to, resetLink, userName } = options;
         
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: emailUser,
             to: to,
             subject: 'Reset Your Bloodline Password',
             html: `
@@ -701,7 +724,7 @@ const sendWelcomeEmail = async (options) => {
             `;
 
         const mailOptions = {
-            from: process.env.EMAIL_USER || 'your-email@gmail.com',
+            from: emailUser,
             to: to,
             subject: '🎉 Welcome to Bloodline - Start Your Life-Saving Journey!',
             html: htmlContent

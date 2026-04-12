@@ -84,7 +84,7 @@ const authenticateAdmin = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.adminId = decoded.adminId;
         next();
     } catch (error) {
@@ -130,7 +130,7 @@ router.post('/login', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { adminId: admin._id, role: admin.role },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
