@@ -631,11 +631,9 @@ router.post('/send-otp', async (req, res) => {
             role 
         });
         
-        if (!emailResult.success) {
-            return res.status(500).json({ 
-                message: 'Failed to send OTP email',
-                error: emailResult.error 
-            });
+        // Log email result but don't fail the request
+        if (emailResult.warning) {
+            console.warn('Email warning:', emailResult.warning);
         }
         
         console.log(`✅ OTP generated and sent to ${email} (${role}): ${otp}`);

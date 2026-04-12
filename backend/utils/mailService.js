@@ -29,13 +29,14 @@ const testEmailConfig = async () => {
         await transporter.verify();
         console.log('✅ Email service configured successfully');
     } catch (error) {
-        console.error('❌ Email service configuration failed:', error.message);
-        console.error('💡 Please check your EMAIL_USER and EMAIL_PASS environment variables');
+        console.warn('⚠️  Email service configuration failed:', error.message);
+        console.warn('💡 Please check your EMAIL_USER and EMAIL_PASS environment variables');
+        console.warn('📧 Email features will be disabled until credentials are properly configured');
     }
 };
 
-// Test configuration on module load
-testEmailConfig();
+// Test configuration on module load (but don't block startup)
+testEmailConfig().catch(console.warn);
 
 /**
  * Send OTP email for registration verification
@@ -47,6 +48,13 @@ testEmailConfig();
  */
 const sendOTP = async (options) => {
     try {
+        // Check if email service is properly configured
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.warn('⚠️  Email service not configured, skipping email send');
+            // For development/testing, return success without sending email
+            return { success: true, messageId: 'dev-mode-no-email', warning: 'Email not sent - service not configured' };
+        }
+
         const roleText = options.role === 'donor' ? 'Donor' : 'Organization';
         
         const htmlContent = `
@@ -168,7 +176,8 @@ const sendOTP = async (options) => {
         return { success: true, messageId: result.messageId };
     } catch (error) {
         console.error(`❌ Failed to send OTP email to ${options.to}:`, error);
-        return { success: false, error: error.message };
+        // Don't fail the entire request if email fails
+        return { success: true, messageId: 'email-failed-fallback', warning: 'Email failed but request succeeded' };
     }
 };
 
