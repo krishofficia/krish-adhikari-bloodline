@@ -117,13 +117,79 @@ router.post('/', authenticateToken, validateBloodRequest, async (req, res) => {
         let emailSentCount = 0;
         for (const donor of matchingDonors) {
             try {
-                const emailHtml = generateBloodRequestEmail(donor, bloodRequest, organization);
-                await sendNotification({
-                    to: donor.email,
-                    subject: `Urgent Blood Request - ${bloodRequest.bloodGroup} Needed at ${bloodRequest.location}`,
-                    html: emailHtml
-                });
+                const subject = `Urgent Blood Request - ${bloodRequest.bloodGroup} Needed at ${bloodRequest.location}`;
+                const body = `
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+                        <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                            <h1 style="margin: 0; font-size: 28px;">🆘 Urgent Blood Request</h1>
+                            <p style="margin: 10px 0 0 0; opacity: 0.9;">Bloodline - Blood Donation Management System</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+                            <h2 style="color: #333; margin-top: 0;">Dear ${donor.fullName || 'Donor'},</h2>
+                            
+                            <p style="color: #666; line-height: 1.6;">There is an <strong style="color: #dc3545;">urgent blood request</strong> that matches your blood group and location. Your donation could save a life!</p>
+                            
+                            <div style="background: white; padding: 20px; border-left: 4px solid #dc3545; margin: 20px 0; border-radius: 5px;">
+                                <h3 style="color: #dc3545; margin-top: 0;">Blood Request Details:</h3>
+                                <ul style="color: #666; margin-bottom: 0;">
+                                    <li><strong>Blood Group:</strong> ${bloodRequest.bloodGroup}</li>
+                                    <li><strong>Quantity:</strong> ${bloodRequest.quantity} units</li>
+                                    <li><strong>Hospital:</strong> ${bloodRequest.hospitalName}</li>
+                                    <li><strong>Location:</strong> ${bloodRequest.location}</li>
+                                    <li><strong>Urgency:</strong> ${bloodRequest.urgencyLevel}</li>
+                                    <li><strong>Required Date:</strong> ${new Date(bloodRequest.requiredDate).toLocaleDateString()}</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #fff3cd; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                                <h4 style="color: #856404; margin-top: 0;">How to Respond:</h4>
+                                <ol style="color: #666; text-align: left; margin-bottom: 0;">
+                                    <li>Login to your Bloodline donor dashboard</li>
+                                    <li>View this blood request in your available requests</li>
+                                    <li>Click "Donate" if you're available</li>
+                                    <li>Contact the hospital directly if needed</li>
+                                </ol>
+                                
+                                <div style="margin-top: 20px;">
+                                    <a href="https://krish-adhikari-bloodline.vercel.app/login" 
+                                       style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                                        Login to Respond
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                                <h4 style="color: #0c5460; margin-top: 0;">Your Information:</h4>
+                                <ul style="color: #666; margin-bottom: 0;">
+                                    <li><strong>Your Blood Group:</strong> ${donor.bloodGroup}</li>
+                                    <li><strong>Your Location:</strong> ${donor.location}</li>
+                                    <li><strong>Your Availability:</strong> ${donor.availability}</li>
+                                </ul>
+                            </div>
+                            
+                            <p style="color: #666; line-height: 1.6;">Thank you for being a life-saving donor. Your contribution to the community is invaluable.</p>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <p style="color: #999; font-size: 14px; margin-bottom: 0;">
+                                    If you have any questions or need to update your availability, please contact us.<br>
+                                    <a href="mailto:support@bloodline.com" style="color: #dc3545;">support@bloodline.com</a>
+                                </p>
+                            </div>
+                            
+                            <hr style="border: none; border-top: 1px solid #e9ecef; margin: 30px 0;">
+                            
+                            <p style="color: #999; font-size: 14px; text-align: center; margin-bottom: 0;">
+                                This is an automated message from Bloodline Blood Donation Management System.<br>
+                                Please do not reply to this email.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                await emailService.sendEmail(donor.email, subject, body, true);
                 emailSentCount++;
+                console.log(`Email sent to donor: ${donor.email}`);
             } catch (emailError) {
                 console.error(`Failed to send email to ${donor.email}:`, emailError);
             }
