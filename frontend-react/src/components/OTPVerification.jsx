@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 // Add custom CSS for OTP verification form
 const otpFormStyles = `
@@ -283,11 +284,8 @@ function OTPVerification() {
     setLoading(true)
     
     try {
-      const response = await fetch('/api/auth/verify-otp', {
+      const response = await apiFetch('/api/auth/verify-otp', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           email,
           otp: otpString,
@@ -327,11 +325,8 @@ function OTPVerification() {
     setLoading(true)
     
     try {
-      const response = await fetch('/api/auth/send-otp', {
+      const response = await apiFetch('/api/auth/send-otp', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           email,
           role,
