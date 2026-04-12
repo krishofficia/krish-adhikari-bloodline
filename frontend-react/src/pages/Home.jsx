@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import BloodDonationQuotes from '../components/BloodDonationQuotes'
 import StatisticsSection from '../components/StatisticsSection'
@@ -6,6 +6,28 @@ import CallToAction from '../components/CallToAction'
 import '../components/EnhancedHomepage.css'
 
 function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
+  const closeMenu = () => {
+    setIsMenuOpen(false)
+  }
+
+  useEffect(() => {
+    // Close menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('.navbar')) {
+        closeMenu()
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [isMenuOpen])
+
   return (
     <div>
       {/* Navigation Bar */}
@@ -15,15 +37,15 @@ function Home() {
             <i className="fas fa-heartbeat"></i>
             <span>Bloodline</span>
           </div>
-          <ul className="nav-menu">
-            <li><Link to="/" className="active">Home</Link></li>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register Donor</Link></li>
-            <li><Link to="/org-register">Register Org</Link></li>
-            <li><Link to="/chatbot"><i className="fas fa-robot"></i> Chatbot</Link></li>
+          <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+            <li><Link to="/" className="active" onClick={closeMenu}>Home</Link></li>
+            <li><Link to="/login" onClick={closeMenu}>Login</Link></li>
+            <li><Link to="/register" onClick={closeMenu}>Register Donor</Link></li>
+            <li><Link to="/org-register" onClick={closeMenu}>Register Org</Link></li>
+            <li><Link to="/chatbot" onClick={closeMenu}><i className="fas fa-robot"></i> Chatbot</Link></li>
           </ul>
-          <div className="hamburger">
-            <i className="fas fa-bars"></i>
+          <div className="hamburger" onClick={toggleMenu}>
+            <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </div>
         </div>
       </nav>

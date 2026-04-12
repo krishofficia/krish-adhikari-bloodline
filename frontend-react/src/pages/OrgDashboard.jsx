@@ -54,6 +54,28 @@ const formStyles = `
 `;
 
 function OrgDashboard() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
+  const closeMenu = () => {
+    setIsMenuOpen(false)
+  }
+
+  useEffect(() => {
+    // Close menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('.navbar')) {
+        closeMenu()
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [isMenuOpen])
+
   const [requestData, setRequestData] = useState({
     bloodGroup: '',
     quantity: '',
@@ -707,10 +729,10 @@ function OrgDashboard() {
             <i className="fas fa-heartbeat"></i>
             <span>Bloodline</span>
           </div>
-          <ul className="nav-menu">
-            <li><a href="#home">Home</a></li>
+          <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
+            <li><a href="#home" onClick={closeMenu}>Home</a></li>
             <li>
-              <button onClick={() => setShowChangePassword(true)} className="change-password-link" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', padding: '0.5rem 1rem', fontWeight: '500' }}>
+              <button onClick={() => { setShowChangePassword(true); closeMenu(); }} className="change-password-link" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', padding: '0.5rem 1rem', fontWeight: '500' }}>
                 <i className="fas fa-key"></i>
                 Change Password
               </button>
@@ -722,8 +744,8 @@ function OrgDashboard() {
               </button>
             </li>
           </ul>
-          <div className="hamburger">
-            <i className="fas fa-bars"></i>
+          <div className="hamburger" onClick={toggleMenu}>
+            <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </div>
         </div>
       </nav>
