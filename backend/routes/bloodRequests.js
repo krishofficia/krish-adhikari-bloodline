@@ -1230,10 +1230,8 @@ router.post('/:requestId/donation-complete', authenticateToken, async (req, res)
 
         // Send thank you email to donor
         try {
-            await sendNotification({
-                to: donorResponse.donorEmail,
-                subject: 'Thank You for Your Blood Donation! 🩸',
-                html: `
+            const subject = 'Thank You for Your Blood Donation! 🩸';
+            const body = `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 30px; border-radius: 10px; text-align: center;">
                             <h1 style="margin: 0; font-size: 28px;">🎉 Thank You, Hero!</h1>
@@ -1270,8 +1268,9 @@ router.post('/:requestId/donation-complete', authenticateToken, async (req, res)
                             </p>
                         </div>
                     </div>
-                `
-            });
+                `;
+            
+            await emailService.sendEmail(donorResponse.donorEmail, subject, body, true);
             console.log('Thank you email sent to donor');
         } catch (emailError) {
             console.error('Failed to send thank you email:', emailError);

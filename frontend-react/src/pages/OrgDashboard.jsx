@@ -600,6 +600,48 @@ function OrgDashboard() {
     }
   }
 
+  const handleDonationComplete = async (requestId, donorId) => {
+    if (!confirm('Are you sure you want to mark this donation as complete?')) return
+
+    try {
+      const token = localStorage.getItem('token')
+      
+      // Find the donor response to get donor details
+      const selectedDonor = selectedRequest?.responses?.find(r => r.donorId === donorId)
+      
+      if (!selectedDonor) {
+        showNotification('Donor information not found', 'error')
+        return
+      }
+
+      const response = await apiFetch(`/api/blood-requests/${requestId}/donation-complete`, {
+        method: 'POST',
+        body: JSON.stringify({
+          donorId: selectedDonor.donorId,
+          donorName: selectedDonor.fullName,
+          donorEmail: selectedDonor.email,
+          donorPhone: selectedDonor.phone,
+          donationDate: new Date().toISOString()
+        })
+      })
+
+      if (response.ok) {
+        showNotification('Donation marked as complete! Thank you email sent.', 'success')
+        // Refresh data to show updated status
+        await loadDashboardData()
+        // Close modal
+        setShowDonorsModal(false)
+        setSelectedRequest(null)
+      } else {
+        const errorData = await response.json()
+        showNotification('Failed to mark donation complete: ' + errorData.message, 'error')
+      }
+    } catch (error) {
+      console.error('Error marking donation complete:', error)
+      showNotification('Error marking donation complete', 'error')
+    }
+  }
+
   const showNotification = (message, type) => {
     setNotification({ show: true, message, type })
     
