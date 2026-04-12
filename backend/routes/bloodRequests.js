@@ -221,7 +221,13 @@ router.get('/', authenticateToken, async (req, res) => {
         
         // Find all blood requests for this organization
         const bloodRequests = await BloodRequest.find({ organizationId })
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean(); // Use lean for better performance
+
+        // Populate donor responses for each request
+        for (const request of bloodRequests) {
+            request.donorResponses = request.donorResponses || [];
+        }
 
         console.log(`Found ${bloodRequests.length} blood requests for organization ${organizationId}`);
 
