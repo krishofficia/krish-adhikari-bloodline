@@ -7,12 +7,11 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // Validate email configuration
-const emailUser = process.env.EMAIL_USER;
-const emailPass = process.env.EMAIL_PASS;
+const emailUser = process.env.EMAIL_USER || 'fallback-email@example.com';
+const emailPass = process.env.EMAIL_PASS || 'fallback-password';
 
-if (!emailUser || !emailPass) {
-    console.error('❌ EMAIL_USER and EMAIL_PASS environment variables are required');
-    console.error('💡 Please configure email credentials in your environment variables');
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('⚠️  EMAIL_USER and EMAIL_PASS not set, using fallbacks (please set in production)');
 }
 
 // Email configuration

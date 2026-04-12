@@ -3,11 +3,10 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
         // Use MONGODB_URI environment variable
-        const mongoUri = process.env.MONGODB_URI;
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/bloodline';
         
-        if (!mongoUri) {
-            console.error('❌ MONGODB_URI environment variable is required');
-            process.exit(1);
+        if (!process.env.MONGODB_URI) {
+            console.warn('⚠️  MONGODB_URI not set, using fallback (please set in production)');
         }
         
         console.log(`🔗 Connecting to MongoDB...`);
