@@ -5,25 +5,13 @@ const Organization = require('../models/Organization');
 const Donor = require('../models/Donor');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-
-// Email transporter setup
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const emailService = require('../services/emailService');
 
 // Send rejection email to organization
 const sendRejectionEmail = async (organization, rejectionReason) => {
     try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: organization.email,
-            subject: 'Organization Registration Rejected - Bloodline',
-            html: `
+        const subject = 'Organization Registration Rejected - Bloodline';
+        const body = `
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
                         <h1 style="margin: 0; font-size: 28px;">❌ Organization Registration Rejected</h1>
@@ -43,7 +31,7 @@ const sendRejectionEmail = async (organization, rejectionReason) => {
                         <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
                             <h4 style="color: #856404; margin-top: 0;">What can you do?</h4>
                             <ul style="color: #666; margin-bottom: 0;">
-                                <li>Review the rejection reason carefully</li>
+                                <li>Review rejection reason carefully</li>
                                 <li>Address the mentioned issues</li>
                                 <li>Contact support if you need clarification</li>
                                 <li>Submit a new registration with corrected information</li>
@@ -64,10 +52,9 @@ const sendRejectionEmail = async (organization, rejectionReason) => {
                         </p>
                     </div>
                 </div>
-            `
-        };
-
-        await transporter.sendMail(mailOptions);
+            `;
+        
+        await emailService.sendEmail(organization.email, subject, body, true);
         console.log('Rejection email sent to organization:', organization.email);
     } catch (error) {
         console.error('Error sending rejection email:', error);

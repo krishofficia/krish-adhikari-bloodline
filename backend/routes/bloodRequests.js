@@ -5,7 +5,7 @@ const Organization = require('../models/Organization');
 const Donor = require('../models/Donor');
 const Donation = require('../models/Donation');
 const jwt = require('jsonwebtoken');
-const { sendNotification, generateBloodRequestEmail } = require('../utils/mailService');
+const emailService = require('../services/emailService');
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -279,7 +279,6 @@ router.put('/:id', authenticateToken, validateBloodRequest, async (req, res) => 
                 console.log(`🔍 Total donors to notify: ${donorsToNotify.length}`);
                 
                 // Send notifications to all accepted donors
-                const { sendNotification } = require('../utils/mailService');
                 
                 for (const donor of donorsToNotify) {
                     let emailSubject = 'Blood Request Updated - Bloodline';
