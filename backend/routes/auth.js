@@ -6,7 +6,7 @@ const BloodRequest = require('../models/BloodRequest');
 const PasswordReset = require('../models/PasswordReset');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendOTP, sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/mailService');
+const emailService = require('../services/emailService');
 const { generateOTP, storeOTP, verifyOTP, hasPendingOTP } = require('../utils/otpStore');
 const { generateResetToken, hashToken, verifyToken } = require('../utils/tokenGenerator');
 
@@ -625,15 +625,14 @@ router.post('/send-otp', async (req, res) => {
         storeOTP(email, otp, role, userDataWithEmail);
         
         // Send OTP email
-        const emailResult = await sendOTP({ 
-            to: email, 
-            otp, 
-            role 
-        });
+        const userName = userData.fullName || userData.name || email;
+        const emailResult = await emailService.sendOTP(email, otp, userName);
         
         // Log email result but don't fail the request
-        if (emailResult.warning) {
-            console.warn('Email warning:', emailResult.warning);
+        if (emailResult.fallback) {
+            console.warn('Email service in fallback mode');
+        } else if (!emailResult.success) {
+            console.warn('Email warning:', emailResult.message);
         }
         
         console.log(`✅ OTP generated and sent to ${email} (${role}): ${otp}`);
@@ -796,15 +795,16 @@ router.post('/forgot-password', async (req, res) => {
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
         
         // Send reset email
-        const emailResult = await sendPasswordResetEmail({
-            to: email,
-            resetLink: resetLink,
-            userName: user.fullName || user.name
-        });
+        const userName = user.fullName || user.name || email;
+        const emailResult = await emailService.sendPasswordReset(email, resetLink, userName);
         
-        if (!emailResult.success) {
-            console.error('Failed to send reset email:', emailResult.error);
+        if (!emailResult.success && !emailResult.fallback) {
+            console.error('Failed to send reset email:', emailResult.message);
             return res.status(500).json({ message: 'Failed to send reset email' });
+        }
+        
+        if (emailResult.fallback) {
+            console.warn('Email service in fallback mode for password reset');
         }
         
         console.log(`Password reset email sent to: ${email}`);
