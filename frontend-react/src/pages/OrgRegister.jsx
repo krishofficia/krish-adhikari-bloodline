@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { apiFetch } from '../api'
+import Navigation from '../components/Navigation'
 
 // Add custom CSS for form styling to match blood group dropdown
 const orgRegisterFormStyles = `
@@ -230,23 +231,15 @@ function OrgRegister() {
   return (
     <div>
       {/* Navigation Bar */}
-      <nav className="navbar">
-        <div className="container">
-          <div className="nav-brand">
-            <i className="fas fa-heartbeat"></i>
-            <span>Bloodline</span>
-          </div>
-          <ul className="nav-menu">
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-            <li><Link to="/org-register" className="active">Register Organization</Link></li>
-          </ul>
-          <div className="hamburger">
-            <i className="fas fa-bars"></i>
-          </div>
-        </div>
-      </nav>
+      <Navigation 
+        navItems={[
+          { to: '/', label: 'Home' },
+          { to: '/login', label: 'Login' },
+          { to: '/register', label: 'Register' },
+          { to: '/org-register', label: 'Register Organization', active: true }
+        ]}
+        activeLink={location.pathname}
+      />
 
       {/* Organization Registration Section */}
       <section className="auth-section">
