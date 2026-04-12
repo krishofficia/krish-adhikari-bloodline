@@ -58,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blood-requests', bloodRequestRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/donor', donorRoutes);
+app.use('/api/setup', require('./routes/setup'));
 
 // API routes should be defined before static file serving
 // Static file serving will be added after API routes
