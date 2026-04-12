@@ -233,6 +233,84 @@ router.post('/organizations/:id/approve', authenticateAdmin, async (req, res) =>
         organization.rejectionReason = null;
         await organization.save();
 
+        // Send approval email
+        try {
+            const subject = 'Organization Registration Approved - Bloodline';
+            const body = `
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+                    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px;">Congratulations! Organization Approved</h1>
+                        <p style="margin: 10px 0 0 0; opacity: 0.9;">Bloodline - Blood Donation Management System</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+                        <h2 style="color: #333; margin-top: 0;">Dear ${organization.name} Team,</h2>
+                        
+                        <p style="color: #666; line-height: 1.6;">We are thrilled to inform you that your organization registration has been <strong style="color: #28a745;">approved</strong> by our admin team!</p>
+                        
+                        <div style="background: white; padding: 20px; border-left: 4px solid #28a745; margin: 20px 0; border-radius: 5px;">
+                            <h3 style="color: #28a745; margin-top: 0;">Registration Details:</h3>
+                            <ul style="color: #666; margin-bottom: 0;">
+                                <li><strong>Organization:</strong> ${organization.name}</li>
+                                <li><strong>Email:</strong> ${organization.email}</li>
+                                <li><strong>Phone:</strong> ${organization.phone}</li>
+                                <li><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Approved</span></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e8f5e8; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                            <h4 style="color: #28a745; margin-top: 0;">You Can Now Login!</h4>
+                            <p style="color: #666; margin-bottom: 20px;">Your organization account is now active and ready to use.</p>
+                            
+                            <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                                <p style="margin: 0 0 10px 0;"><strong>Login Credentials:</strong></p>
+                                <p style="margin: 0 0 5px 0;"><strong>Email:</strong> ${organization.email}</p>
+                                <p style="margin: 0;"><strong>Password:</strong> (Use the password you set during registration)</p>
+                            </div>
+                            
+                            <a href="https://krish-adhikari-bloodline.vercel.app/login" 
+                               style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                                Login to Your Account
+                            </a>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                            <h4 style="color: #856404; margin-top: 0;">What's Next?</h4>
+                            <ul style="color: #666; margin-bottom: 0;">
+                                <li>Login to your organization dashboard</li>
+                                <li>Create and manage blood donation requests</li>
+                                <li>View and respond to donor applications</li>
+                                <li>Manage your organization profile</li>
+                                <li>Track donation history and statistics</li>
+                            </ul>
+                        </div>
+                        
+                        <p style="color: #666; line-height: 1.6;">Thank you for joining Bloodline in our mission to save lives through blood donation. Together, we can make a real difference in our community.</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <p style="color: #999; font-size: 14px; margin-bottom: 0;">
+                                If you have any questions or need assistance, please contact our support team.<br>
+                                <a href="mailto:support@bloodline.com" style="color: #28a745;">support@bloodline.com</a>
+                            </p>
+                        </div>
+                        
+                        <hr style="border: none; border-top: 1px solid #e9ecef; margin: 30px 0;">
+                        
+                        <p style="color: #999; font-size: 14px; text-align: center; margin-bottom: 0;">
+                            This is an automated message from Bloodline Blood Donation Management System.<br>
+                            Please do not reply to this email.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            await emailService.sendEmail(organization.email, subject, body, true);
+            console.log('Approval email sent to organization:', organization.email);
+        } catch (emailError) {
+            console.error('Error sending approval email:', emailError);
+            // Don't fail the approval if email fails
+        }
+
         res.json({
             success: true,
             message: 'Organization approved successfully',
