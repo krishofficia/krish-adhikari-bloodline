@@ -3,6 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import ChangePassword from '../components/ChangePassword'
 import '../components/ChangePasswordButton.css'
+import { apiFetch } from '../api'
 
 // Add custom CSS for form styling
 const formStyles = `
@@ -292,11 +293,7 @@ function OrgDashboard() {
       console.log('Loading dashboard data with token:', token)
       
       // Load organization's blood requests
-      const requestsResponse = await fetch('/api/blood-requests', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const requestsResponse = await apiFetch('/api/blood-requests')
       
       console.log('Requests response status:', requestsResponse.status)
       
@@ -324,11 +321,7 @@ function OrgDashboard() {
 
       // Load available donors
       try {
-        const donorsResponse = await fetch('/api/blood-requests/available-donors', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const donorsResponse = await apiFetch('/api/blood-requests/available-donors')
         
         if (donorsResponse.ok) {
           const donorsData = await donorsResponse.json()
@@ -353,11 +346,7 @@ function OrgDashboard() {
       console.log('🗺️ Token:', token ? 'exists' : 'missing')
       
       // Use the existing working endpoint for donors
-      const response = await fetch('/api/blood-requests/available-donors', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await apiFetch('/api/blood-requests/available-donors')
       
       console.log('🗺️ API Response status:', response.status)
       
@@ -526,12 +515,8 @@ function OrgDashboard() {
         method = 'POST'
       }
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(requestData)
       })
 
@@ -600,11 +585,8 @@ function OrgDashboard() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/blood-requests/delete/${requestId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/blood-requests/delete/${requestId}`, {
+        method: 'DELETE'
       })
 
       if (response.ok) {
@@ -615,51 +597,6 @@ function OrgDashboard() {
     } catch (error) {
       console.error('Error deleting request:', error)
       showNotification('Error deleting blood request', 'error')
-    }
-  }
-
-  const handleDonationComplete = async (requestId, donorId) => {
-    if (!confirm('Are you sure you want to mark this donation as complete? A thank you email will be sent to donor.')) return
-
-    try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/blood-requests/${requestId}/donation-complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ donorId })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        showNotification('Donation marked as complete! Thank you email sent to donor.', 'success')
-        
-        // Update the selected request in real-time
-        setSelectedRequest(prev => {
-          if (prev && prev._id === requestId) {
-            return {
-              ...prev,
-              donorResponses: prev.donorResponses.map(response => 
-                response.donorId === donorId 
-                  ? { ...response, status: 'completed', completionDate: new Date() }
-                  : response
-              )
-            }
-          }
-          return prev
-        })
-        
-        // Also refresh background data
-        await loadDashboardData()
-      } else {
-        const errorData = await response.json()
-        showNotification('Failed to mark donation complete: ' + errorData.message, 'error')
-      }
-    } catch (error) {
-      console.error('Error marking donation complete:', error)
-      showNotification('Error marking donation complete', 'error')
     }
   }
 
@@ -696,11 +633,8 @@ function OrgDashboard() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/blood-requests/${requestId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiFetch(`/api/blood-requests/${requestId}`, {
+        method: 'DELETE'
       })
 
       if (response.ok) {
