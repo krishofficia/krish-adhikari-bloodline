@@ -29,11 +29,8 @@ function DonorDashboard() {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [editFormData, setEditFormData] = useState({
     fullName: '',
-    email: '',
     phone: '',
-    location: '',
-    bloodGroup: '',
-    availability: ''
+    location: ''
   })
 
   useEffect(() => {
@@ -249,11 +246,8 @@ function DonorDashboard() {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     setEditFormData({
       fullName: user.fullName || donorData.name || '',
-      email: user.email || donorData.email || '',
       phone: user.phone || donorData.phone || '',
-      location: user.location || donorData.location || '',
-      bloodGroup: user.bloodGroup || donorData.bloodGroup || '',
-      availability: user.availability || user.available || 'available'
+      location: user.location || donorData.location || ''
     })
     setShowEditProfile(true)
   }
@@ -286,18 +280,12 @@ function DonorDashboard() {
         localStorage.setItem('user', JSON.stringify(updatedUser))
         
         // Update state
-        setDonorData({
+        setDonorData(prev => ({
+          ...prev,
           name: editFormData.fullName,
-          email: editFormData.email,
           phone: editFormData.phone,
-          location: editFormData.location,
-          bloodGroup: editFormData.bloodGroup
-        })
-        
-        // Update availability if changed
-        const availabilityValue = editFormData.availability
-        const isAvailableStatus = availabilityValue === 'available'
-        setIsAvailable(isAvailableStatus)
+          location: editFormData.location
+        }))
         
         setShowEditProfile(false)
         
@@ -941,26 +929,6 @@ function DonorDashboard() {
 
               <div className="form-group" style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  <i className="fas fa-envelope"></i> Email
-                </label>
-                <input 
-                  type="email"
-                  name="email"
-                  value={editFormData.email}
-                  onChange={handleEditFormChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #d32f2f',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                   <i className="fas fa-phone"></i> Phone
                 </label>
                 <input 
@@ -997,57 +965,6 @@ function DonorDashboard() {
                     fontSize: '1rem'
                   }}
                 />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  <i className="fas fa-tint"></i> Blood Group
-                </label>
-                <select 
-                  name="bloodGroup"
-                  value={editFormData.bloodGroup}
-                  onChange={handleEditFormChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #d32f2f',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
-                  }}
-                >
-                  <option value="">Select Blood Group</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  <i className="fas fa-toggle-on"></i> Availability
-                </label>
-                <select 
-                  name="availability"
-                  value={editFormData.availability}
-                  onChange={handleEditFormChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #d32f2f',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
-                  }}
-                >
-                  <option value="available">Available</option>
-                  <option value="not-available">Not Available</option>
-                </select>
               </div>
 
               <div className="modal-actions" style={{

@@ -922,16 +922,14 @@ router.put('/update-profile', async (req, res) => {
         }
 
         // Update donor profile
-        const { fullName, phone, location, bloodGroup, availability } = req.body;
+        const { fullName, phone, location } = req.body;
         
         const updatedDonor = await Donor.updateOne(
             { email },
             { 
                 fullName: fullName || donor.fullName,
                 phone: phone || donor.phone,
-                location: location || donor.location,
-                bloodGroup: bloodGroup || donor.bloodGroup,
-                availability: availability || donor.availability
+                location: location || donor.location
             }
         );
 
@@ -942,9 +940,7 @@ router.put('/update-profile', async (req, res) => {
             data: {
                 fullName: fullName || donor.fullName,
                 phone: phone || donor.phone,
-                location: location || donor.location,
-                bloodGroup: bloodGroup || donor.bloodGroup,
-                availability: availability || donor.availability
+                location: location || donor.location
             }
         });
         
