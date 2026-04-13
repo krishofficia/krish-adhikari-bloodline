@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../api';
 import './ChangePassword.css';
 
 const ChangePassword = ({ onClose, onSuccess }) => {

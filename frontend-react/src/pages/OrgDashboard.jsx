@@ -115,10 +115,7 @@ function OrgDashboard() {
     loadDashboardData()
     fetchDonorLocations()
     
-    // Set up live updates every 10 seconds
-    const interval = setInterval(() => {
-      fetchDonorLocations()
-    }, 10000)
+    // Don't set up interval - remove infinite loop
     
     return () => clearInterval(interval)
   }, [])
