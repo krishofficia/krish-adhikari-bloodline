@@ -79,7 +79,10 @@ function ResetPassword() {
   const location = useLocation()
   
   // Extract token from URL query parameters
-  const token = new URLSearchParams(location.search).get('token')
+  const urlParams = new URLSearchParams(location.search)
+  const token = urlParams.get('token')
+  
+  console.log('Reset token:', token) // Debug log
   
   const [formData, setFormData] = useState({
     password: '',
