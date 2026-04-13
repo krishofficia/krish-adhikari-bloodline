@@ -56,14 +56,8 @@ const ChangePassword = ({ onClose, onSuccess }) => {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch('/api/auth/change-password', {
+      const response = await apiFetch('/api/auth/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword

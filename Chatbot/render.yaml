@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: bloodline-chatbot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python chatbot_api.py
+    healthCheckPath: /health
+    autoDeploy: true

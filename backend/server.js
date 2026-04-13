@@ -255,7 +255,8 @@ app.get('/api/health', (req, res) => {
 // Health check that includes Python service status
 app.get('/api/health/python', async (req, res) => {
     try {
-        const response = await fetch('http://127.0.0.1:5001/health');
+        const chatbotUrl = process.env.CHATBOT_URL || 'http://127.0.0.1:5001';
+        const response = await fetch(`${chatbotUrl}/health`);
         if (response.ok) {
             const data = await response.json();
             res.json({ 
@@ -309,7 +310,8 @@ app.post('/api/chatbot', async (req, res) => {
         console.log('Forwarding question to Python chatbot service...');
         
         // Call Python Flask API
-        const chatbotResponse = await fetch('http://127.0.0.1:5001/chat', {
+        const chatbotUrl = process.env.CHATBOT_URL || 'http://127.0.0.1:5001';
+        const chatbotResponse = await fetch(`${chatbotUrl}/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

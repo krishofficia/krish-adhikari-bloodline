@@ -140,7 +140,7 @@ function OrgDashboard() {
     } else if (donorLocations.length === 0 && !mapLoading) {
       console.log('🗺️ No donor locations to display')
     }
-  }, [donorLocations, mapLoading])
+  }, [donorLocations]) // Remove mapLoading from dependencies
 
   // Initialize the Leaflet map
   const initializeMap = () => {
