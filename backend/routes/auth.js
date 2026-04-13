@@ -227,6 +227,55 @@ router.get('/profile', async (req, res) => {
     }
 });
 
+// PUT /api/auth/profile - Update donor profile
+router.put('/profile', async (req, res) => {
+    console.log('Update profile endpoint called');
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const donorId = decoded.donorId;
+        
+        const donor = await Donor.findById(donorId);
+        if (!donor) {
+            return res.status(404).json({ message: 'Donor not found' });
+        }
+        
+        // Update donor profile
+        const { fullName, phone, location } = req.body;
+        
+        const updatedDonor = await Donor.updateOne(
+            { _id: donorId },
+            { 
+                fullName: fullName || donor.fullName,
+                phone: phone || donor.phone,
+                location: location || donor.location
+            }
+        );
+
+        console.log(`Profile updated for donor: ${donor.email}`);
+        res.json({ 
+            success: true, 
+            message: 'Profile updated successfully',
+            data: {
+                fullName: fullName || donor.fullName,
+                phone: phone || donor.phone,
+                location: location || donor.location
+            }
+        });
+        
+    } catch (error) {
+        console.error('Update profile error:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // POST /api/auth/register-donor - Register a new donor
 router.post('/register-donor', async (req, res) => {
     try {
@@ -901,6 +950,12 @@ router.post('/reset-password/:token', async (req, res) => {
         console.error('Reset password error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
+});
+
+// Test route to verify auth routes are working
+router.get('/test', (req, res) => {
+    console.log('Auth test route called');
+    res.json({ message: 'Auth routes are working!' });
 });
 
 // PUT /api/auth/update-profile - Update donor profile

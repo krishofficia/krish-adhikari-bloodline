@@ -266,7 +266,7 @@ function DonorDashboard() {
     try {
       const token = localStorage.getItem('token')
       
-      const response = await apiFetch('/api/auth/update-profile', {
+      const response = await apiFetch('/api/auth/profile', {
         method: 'PUT',
         body: JSON.stringify(editFormData)
       })
