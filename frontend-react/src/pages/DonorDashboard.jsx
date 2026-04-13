@@ -26,6 +26,15 @@ function DonorDashboard() {
   })
   const [leaderboard, setLeaderboard] = useState([])
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    location: '',
+    bloodGroup: '',
+    availability: ''
+  })
 
   useEffect(() => {
     // Load donor data from localStorage or API
@@ -233,6 +242,75 @@ function DonorDashboard() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     window.location.href = '/login'
+  }
+
+  const handleEditProfile = () => {
+    // Pre-fill form with current data
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    setEditFormData({
+      fullName: user.fullName || donorData.name || '',
+      email: user.email || donorData.email || '',
+      phone: user.phone || donorData.phone || '',
+      location: user.location || donorData.location || '',
+      bloodGroup: user.bloodGroup || donorData.bloodGroup || '',
+      availability: user.availability || user.available || 'available'
+    })
+    setShowEditProfile(true)
+  }
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleEditProfileSubmit = async (e) => {
+    e.preventDefault()
+    
+    try {
+      const token = localStorage.getItem('token')
+      
+      const response = await apiFetch('/api/auth/update-profile', {
+        method: 'PUT',
+        body: JSON.stringify(editFormData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Update localStorage
+        const updatedUser = JSON.parse(localStorage.getItem('user') || '{}')
+        Object.assign(updatedUser, editFormData)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        
+        // Update state
+        setDonorData({
+          name: editFormData.fullName,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          location: editFormData.location,
+          bloodGroup: editFormData.bloodGroup
+        })
+        
+        // Update availability if changed
+        const availabilityValue = editFormData.availability
+        const isAvailableStatus = availabilityValue === 'available'
+        setIsAvailable(isAvailableStatus)
+        
+        setShowEditProfile(false)
+        
+        // Show success message
+        alert('Profile updated successfully!')
+      } else {
+        const errorData = await response.json()
+        alert('Failed to update profile: ' + errorData.message)
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Error updating profile')
+    }
   }
 
   const handleAcceptRequest = async (requestId) => {
@@ -515,6 +593,14 @@ function DonorDashboard() {
               </div>
               <div className="profile-actions">
                 <button 
+                  onClick={handleEditProfile}
+                  className="btn btn-primary"
+                  style={{ marginRight: '0.5rem' }}
+                >
+                  <i className="fas fa-edit"></i>
+                  Edit Profile
+                </button>
+                <button 
                   onClick={() => setShowChangePassword(true)}
                   className="btn btn-change-password"
                 >
@@ -783,6 +869,225 @@ function DonorDashboard() {
             setShowChangePassword(false);
           }}
         />
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            position: 'relative'
+          }}>
+            <div className="modal-header" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <h2 style={{ margin: 0, color: 'var(--primary-color)' }}>
+                <i className="fas fa-edit"></i> Edit Profile
+              </h2>
+              <button 
+                onClick={() => setShowEditProfile(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditProfileSubmit}>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-user"></i> Full Name
+                </label>
+                <input 
+                  type="text"
+                  name="fullName"
+                  value={editFormData.fullName}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-envelope"></i> Email
+                </label>
+                <input 
+                  type="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-phone"></i> Phone
+                </label>
+                <input 
+                  type="tel"
+                  name="phone"
+                  value={editFormData.phone}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-map-marker-alt"></i> Location
+                </label>
+                <input 
+                  type="text"
+                  name="location"
+                  value={editFormData.location}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-tint"></i> Blood Group
+                </label>
+                <select 
+                  name="bloodGroup"
+                  value={editFormData.bloodGroup}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  <i className="fas fa-toggle-on"></i> Availability
+                </label>
+                <select 
+                  name="availability"
+                  value={editFormData.availability}
+                  onChange={handleEditFormChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #d32f2f',
+                    borderRadius: '8px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <option value="available">Available</option>
+                  <option value="not-available">Not Available</option>
+                </select>
+              </div>
+
+              <div className="modal-actions" style={{
+                display: 'flex',
+                gap: '1rem',
+                justifyContent: 'flex-end'
+              }}>
+                <button 
+                  type="button"
+                  onClick={() => setShowEditProfile(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '2px solid #d32f2f',
+                    backgroundColor: 'white',
+                    color: '#d32f2f',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#d32f2f',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <i className="fas fa-save"></i> Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )
