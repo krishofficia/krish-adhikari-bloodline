@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { apiFetch } from '../api'
+import Navigation from '../components/Navigation'
 import ChangePassword from '../components/ChangePassword'
 import '../components/ChangePasswordButton.css'
 
@@ -429,26 +430,22 @@ function DonorDashboard() {
   return (
     <div>
       {/* Navigation Bar */}
-      <nav className="navbar">
-        <div className="container">
-          <div className="nav-brand">
-            <i className="fas fa-heartbeat"></i>
-            <span>Bloodline</span>
-          </div>
-          <ul className="nav-menu">
-            <li><a href="#home">Home</a></li>
-            <li>
-              <button onClick={handleLogout} className="logout-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <i className="fas fa-sign-out-alt"></i>
-                Logout
-              </button>
-            </li>
-          </ul>
-          <div className="hamburger">
-            <i className="fas fa-bars"></i>
-          </div>
-        </div>
-      </nav>
+      <Navigation 
+        navItems={[
+          { to: '/login', label: 'Logout', onClick: handleLogout }
+        ]}
+        activeLink={location.pathname}
+        customNavItems={[
+          <button 
+            onClick={() => setShowChangePassword(true)} 
+            className="change-password-link" 
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', padding: '0.5rem 1rem', fontWeight: '500' }}
+          >
+            <i className="fas fa-key"></i>
+            Change Password
+          </button>
+        ]}
+      />
 
       {/* Dashboard Section */}
       <section className="dashboard-section">

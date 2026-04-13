@@ -105,12 +105,14 @@ function OrgRegister() {
     panNumber: '',
     address: '',
     password: '',
+    confirmPassword: '',
     panCardImage: null
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // Inject custom CSS styles
   React.useEffect(() => {
@@ -155,7 +157,7 @@ function OrgRegister() {
     try {
       // Validate form data
       if (!formData.organizationName || !formData.email || !formData.password || 
-          !formData.phone || !formData.address || !formData.licenseNumber || 
+          !formData.confirmPassword || !formData.phone || !formData.address || !formData.licenseNumber || 
           !formData.panNumber || !formData.panCardImage) {
         setError('Please fill all required fields')
         setLoading(false)
@@ -166,6 +168,13 @@ function OrgRegister() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
         setError('Please enter a valid email address')
+        setLoading(false)
+        return
+      }
+
+      // Validate password match
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match')
         setLoading(false)
         return
       }
@@ -190,7 +199,8 @@ function OrgRegister() {
           licenseNumber: formData.licenseNumber,
           panNumber: formData.panNumber,
           panCardImage: formData.panCardImage,
-          password: formData.password
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
         })
       })
 
@@ -408,6 +418,35 @@ function OrgRegister() {
                 </div>
                 <small style={{color: 'var(--text-light)', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block'}}>
                   Choose a strong password (at least 6 characters)
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword">
+                  <i className="fas fa-lock"></i>
+                  Confirm Password
+                </label>
+                <div className="password-input-container">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    required 
+                    placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={showConfirmPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </button>
+                </div>
+                <small style={{color: 'var(--text-light)', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block'}}>
+                  Re-enter your password for confirmation
                 </small>
               </div>
 
