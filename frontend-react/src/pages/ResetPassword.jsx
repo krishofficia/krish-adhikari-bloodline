@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { apiFetch } from '../api'
 import Navigation from '../components/Navigation'
 
@@ -78,11 +78,24 @@ function ResetPassword() {
   const navigate = useNavigate()
   const location = useLocation()
   
-  // Extract token from URL query parameters
+  // Extract token from URL - try both query params and path
+  let token = null
+  
+  // Try query parameters first
   const urlParams = new URLSearchParams(location.search)
-  const token = urlParams.get('token')
+  token = urlParams.get('token')
+  
+  // If not in query params, try to extract from path
+  if (!token && location.pathname) {
+    const pathMatch = location.pathname.match(/\/reset-password\/([^\/]+)/)
+    if (pathMatch && pathMatch[1]) {
+      token = pathMatch[1]
+    }
+  }
   
   console.log('Reset token:', token) // Debug log
+  console.log('Location pathname:', location.pathname)
+  console.log('Location search:', location.search)
   
   const [formData, setFormData] = useState({
     password: '',
