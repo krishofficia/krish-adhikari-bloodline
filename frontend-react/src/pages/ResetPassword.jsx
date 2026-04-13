@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { apiFetch } from '../api'
+import Navigation from '../components/Navigation'
 
 // Add custom CSS for form styling to match blood group dropdown
 const resetPasswordStyles = `
@@ -75,7 +76,11 @@ const resetPasswordStyles = `
 
 function ResetPassword() {
   const navigate = useNavigate()
-  const { token } = useParams()
+  const location = useLocation()
+  
+  // Extract token from URL query parameters
+  const token = new URLSearchParams(location.search).get('token')
+  
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -190,22 +195,14 @@ function ResetPassword() {
     return (
       <div>
         {/* Navigation Bar */}
-        <nav className="navbar">
-          <div className="container">
-            <div className="nav-brand">
-              <i className="fas fa-heartbeat"></i>
-              <span>Bloodline</span>
-            </div>
-            <ul className="nav-menu">
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/login" className="active">Login</Link></li>
-              <li><Link to="/register">Register</Link></li>
-            </ul>
-            <div className="hamburger">
-              <i className="fas fa-bars"></i>
-            </div>
-          </div>
-        </nav>
+        <Navigation 
+          navItems={[
+            { to: '/', label: 'Home' },
+            { to: '/login', label: 'Login', active: true },
+            { to: '/register', label: 'Register' }
+          ]}
+          activeLink={location.pathname}
+        />
 
         <section className="auth-section">
           <div className="container">
@@ -235,22 +232,14 @@ function ResetPassword() {
   return (
     <div>
       {/* Navigation Bar */}
-      <nav className="navbar">
-        <div className="container">
-          <div className="nav-brand">
-            <i className="fas fa-heartbeat"></i>
-            <span>Bloodline</span>
-          </div>
-          <ul className="nav-menu">
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/login" className="active">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-          </ul>
-          <div className="hamburger">
-            <i className="fas fa-bars"></i>
-          </div>
-        </div>
-      </nav>
+      <Navigation 
+        navItems={[
+          { to: '/', label: 'Home' },
+          { to: '/login', label: 'Login', active: true },
+          { to: '/register', label: 'Register' }
+        ]}
+        activeLink={location.pathname}
+      />
 
       {/* Reset Password Section */}
       <section className="auth-section">
