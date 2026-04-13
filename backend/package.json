@@ -1,6 +1,6 @@
 {
   "name": "bloodline-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Backend server for Bloodline blood donation platform",
   "main": "server.js",
   "scripts": {

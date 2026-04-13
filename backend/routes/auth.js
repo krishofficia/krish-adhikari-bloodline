@@ -905,6 +905,7 @@ router.post('/reset-password/:token', async (req, res) => {
 
 // PUT /api/auth/update-profile - Update donor profile
 router.put('/update-profile', async (req, res) => {
+    console.log('Update profile endpoint called');
     try {
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
